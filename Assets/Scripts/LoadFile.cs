@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -18,13 +18,12 @@ public class LoadFile : MonoBehaviour
     private Dictionary<string, ParticleSystem.Particle> particles;
     private Dictionary<string, List<string>> particle_relations;
     private List<LineRenderer> lines;
-    // Start is called before the first frame update
+
     void Start()
     {
         lines = new List<LineRenderer>();
 
         TextAsset ta = Resources.Load<TextAsset>("blood-network");
-        Debug.Log(ta);
         words = ta.text.Split('\n');
 
         TextAsset categories_text = Resources.Load<TextAsset>("blood-categories");
@@ -74,8 +73,8 @@ public class LoadFile : MonoBehaviour
                 new_particle.remainingLifetime = 100000.0f;
                 new_particle.startLifetime = 100000.0f;
                 new_particle.startSize = 0.1f;
-                new_particle.startColor = particle_color;
-                new_particle.position = new Vector3(Random.value * 50, Random.value * 2, Random.value * 50);
+                new_particle.startColor =  particle_color;
+                new_particle.position = new Vector3(Random.value * 50, Random.value * 10, Random.value * 50);
                 particles[genes[gene]] = new_particle;
             }
         }
@@ -128,12 +127,9 @@ public class LoadFile : MonoBehaviour
         ps.SetParticles(vals.ToArray());
         alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
         int num_particles = ps.GetParticles(alive_particles);
-        Debug.Log(num_particles);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
+    void Update(){
         Vector3 controllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote) + body.position;
         Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
         Vector3 controllerDirection = controllerRotation * Vector3.forward;
