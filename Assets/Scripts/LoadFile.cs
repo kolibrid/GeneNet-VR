@@ -34,6 +34,7 @@ public class LoadFile : MonoBehaviour
         ps = GetComponent<ParticleSystem>();
         Color32 particle_color = new Color32(255,0,0,255);
 
+        // Cluster colours
         Dictionary<string, Color32> cat_color = new Dictionary<string, Color32>();
         cat_color.Add("black", new Color32(0,0,0,255));
         cat_color.Add("blue", new Color32(0,0,255,255));
@@ -62,6 +63,8 @@ public class LoadFile : MonoBehaviour
         particles = new Dictionary<string, ParticleSystem.Particle>();
 
         Random rnd = new Random();
+
+        y_distribution = 1;
 
         for(int cat = 0; cat < categories.Length - 1; cat++) {
             string[] content = categories[cat].Split(',');
