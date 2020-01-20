@@ -1,4 +1,13 @@
 {
+  "scopedRegistries": [  
+    {  
+    "name": "npmjs",  
+    "url": "https://registry.npmjs.org/",  
+    "scopes": [  
+      "io.extendreality"  
+    ]  
+    }  
+  ],
   "dependencies": {
     "com.unity.ads": "2.0.8",
     "com.unity.analytics": "3.2.2",
@@ -36,6 +45,8 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
+    "com.unity.modules.xr": "1.0.0",
+    "io.extendreality.vrtk.prefabs": "1.1.8",
+    "io.extendreality.zinnia.unity": "1.11.0"
   }
 }

@@ -64,8 +64,6 @@ public class LoadFile : MonoBehaviour
 
         Random rnd = new Random();
 
-        y_distribution = 1;
-
         for(int cat = 0; cat < categories.Length - 1; cat++) {
             string[] content = categories[cat].Split(',');
             string[] genes = content[1].Split(' ');
@@ -142,7 +140,7 @@ public class LoadFile : MonoBehaviour
         Vector3 gene_pos = new Vector3();
         float min_distance = 1000.0f;
 
-        foreach(KeyValuePair<string, ParticleSystem.Particle> item in particles) {
+        foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles) {
             Vector3 pos = item.Value.position;
             float size = item.Value.startSize;
 
