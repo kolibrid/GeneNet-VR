@@ -156,7 +156,7 @@ public class LoadFile : MonoBehaviour
             }
         }
 
-        if(min_distance < 10.0f) {
+        /* if(min_distance < 10.0f) {
             gene_position.position = gene_pos;
             gene_position.LookAt(2 * gene_position.position - body.position);
             gene_name.text = gene_string;
@@ -177,6 +177,6 @@ public class LoadFile : MonoBehaviour
                 Destroy(line);
             }
             lines.Clear();
-        }
+        } */
     }
 }
