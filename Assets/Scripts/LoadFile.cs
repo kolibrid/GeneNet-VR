@@ -136,6 +136,8 @@ public class LoadFile : MonoBehaviour
         Vector3 controllerDirection = controllerRotation * Vector3.forward;
         Ray controllerRay = new Ray(controllerPosition, controllerDirection);
 
+        Debug.DrawRay(controllerPosition, controllerDirection, Color.green);
+
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
         float min_distance = 1000.0f;
