@@ -8,7 +8,9 @@ public class LoadFile : MonoBehaviour
     public Logger log;
     public Transform body;
     public TextMesh gene_name;
+    public TextMesh gene_name2;
     public Transform gene_position;
+    public Transform rayController;
 
     private string[] words;
     private int counter;
@@ -124,6 +126,8 @@ public class LoadFile : MonoBehaviour
             }
         }
 
+        Debug.Log("Particle realtions " + particle_relations);
+
         IEnumerable<ParticleSystem.Particle> vals = particles_real.Values;
         ps.SetParticles(vals.ToArray());
         alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
@@ -131,16 +135,18 @@ public class LoadFile : MonoBehaviour
     }
 
     void Update(){
-        Vector3 controllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote) + body.position;
+        //Vector3 controllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote) + body.position;
+        Vector3 controllerPosition = rayController.transform.position + body.position;
         Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
-        Vector3 controllerDirection = controllerRotation * Vector3.forward;
+        Vector3 controllerDirection = controllerRotation * Vector3.forward * 10;
         Ray controllerRay = new Ray(controllerPosition, controllerDirection);
+        
 
         Debug.DrawRay(controllerPosition, controllerDirection, Color.green);
 
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
-        float min_distance = 1000.0f;
+        float min_distance = 100.0f;
 
         foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles) {
             Vector3 pos = item.Value.position;
@@ -158,20 +164,30 @@ public class LoadFile : MonoBehaviour
             }
         }
 
-        /* if(min_distance < 10.0f) {
+        if(min_distance < 100.0f) {
             gene_position.position = gene_pos;
             gene_position.LookAt(2 * gene_position.position - body.position);
             gene_name.text = gene_string;
+            gene_name2.text = gene_string;
+            gene_name2.transform.position = gene_position.position;
             if(lines.Count < 10) {
-                foreach(string remote_gene in particle_relations[gene_string]) {
-                    LineRenderer lr = gameObject.AddComponent<LineRenderer>() as LineRenderer;
-                    lr.material = new Material(Shader.Find("Sprites/Default"));
-                    Vector3[] vs = new Vector3[2];
-                    vs[0] = particles[remote_gene].position;
-                    vs[1] = particles[gene_string].position;
-                    lr.positionCount = vs.Length;
-                    lr.SetPositions(vs);
-                    lines.Add(lr);
+                Debug.Log("Gene String " + gene_string);
+                try 
+                {
+                    foreach(string remote_gene in particle_relations[gene_string]) {
+                        Debug.Log("Entrando aqui");
+                        LineRenderer lr = gameObject.AddComponent<LineRenderer>() as LineRenderer;
+                        lr.material = new Material(Shader.Find("Sprites/Default"));
+                        Vector3[] vs = new Vector3[2];
+                        vs[0] = particles[remote_gene].position;
+                        vs[1] = particles[gene_string].position;
+                        lr.positionCount = vs.Length;
+                        lr.SetPositions(vs);
+                        lines.Add(lr);
+                    }   
+                }
+                catch
+                {
                 }
             }
         } else {
@@ -179,6 +195,6 @@ public class LoadFile : MonoBehaviour
                 Destroy(line);
             }
             lines.Clear();
-        } */
+        } 
     }
 }

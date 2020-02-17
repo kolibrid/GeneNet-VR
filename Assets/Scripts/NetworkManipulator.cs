@@ -75,6 +75,6 @@ public class NetworkManipulator : MonoBehaviour
         lControllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTrackedRemote);
         rControllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote);
 
-        network.transform.position = initialNetworkPosition + (rControllerPosition - rControllerInitialPosition);
+        network.transform.position = initialNetworkPosition + (rControllerInitialPosition - rControllerPosition);
     }
 }
