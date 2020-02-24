@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class LoadFile : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class LoadFile : MonoBehaviour
     public TextMesh gene_name2;
     public Transform gene_position;
     public Transform rayController;
+    public Material material;
 
     private string[] words;
     private int counter;
@@ -20,6 +22,7 @@ public class LoadFile : MonoBehaviour
     private Dictionary<string, ParticleSystem.Particle> particles;
     private Dictionary<string, List<string>> particle_relations;
     private List<LineRenderer> lines;
+    UnityEvent m_RelationshipEvent;
 
     void Start()
     {
@@ -126,16 +129,27 @@ public class LoadFile : MonoBehaviour
             }
         }
 
-        Debug.Log("Particle realtions " + particle_relations);
-
         IEnumerable<ParticleSystem.Particle> vals = particles_real.Values;
         ps.SetParticles(vals.ToArray());
         alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
         int num_particles = ps.GetParticles(alive_particles);
+
+
+
+         if (m_RelationshipEvent == null)
+            m_RelationshipEvent = new UnityEvent();
+
+        m_RelationshipEvent.AddListener(Draw);
     }
 
     void Update(){
-        //Vector3 controllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote) + body.position;
+        if(OVRInput.Get(OVRInput.Axis1D.SecondaryIndexTrigger) > 0.75){
+            m_RelationshipEvent.Invoke();
+        }
+        
+    }
+     void Draw(){
+        //Vect or3 controllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote) + body.position;
         Vector3 controllerPosition = rayController.transform.position + body.position;
         Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
         Vector3 controllerDirection = controllerRotation * Vector3.forward * 10;
@@ -149,7 +163,7 @@ public class LoadFile : MonoBehaviour
         float min_distance = 100.0f;
 
         foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles) {
-            Vector3 pos = item.Value.position;
+            Vector3 pos = transform.InverseTransformPoint(item.Value.position);
             float size = item.Value.startSize;
 
             float distance = Vector3.Cross(controllerRay.direction, pos - controllerRay.origin).magnitude;
@@ -171,13 +185,12 @@ public class LoadFile : MonoBehaviour
             gene_name2.text = gene_string;
             gene_name2.transform.position = gene_position.position;
             if(lines.Count < 10) {
-                Debug.Log("Gene String " + gene_string);
                 try 
                 {
                     foreach(string remote_gene in particle_relations[gene_string]) {
-                        Debug.Log("Entrando aqui");
-                        LineRenderer lr = gameObject.AddComponent<LineRenderer>() as LineRenderer;
-                        lr.material = new Material(Shader.Find("Sprites/Default"));
+                        GameObject obj = new GameObject("line");
+                        LineRenderer lr = obj.AddComponent<LineRenderer>() as LineRenderer;
+                        lr.material = material;
                         Vector3[] vs = new Vector3[2];
                         vs[0] = particles[remote_gene].position;
                         vs[1] = particles[gene_string].position;
@@ -196,5 +209,5 @@ public class LoadFile : MonoBehaviour
             }
             lines.Clear();
         } 
-    }
+     }
 }
