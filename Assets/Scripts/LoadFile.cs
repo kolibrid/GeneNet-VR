@@ -24,6 +24,9 @@ public class LoadFile : MonoBehaviour
     private List<LineRenderer> lines;
     UnityEvent m_RelationshipEvent;
 
+    private GameObject go_line;
+    private LineRenderer lr_line;
+
     void Start()
     {
         lines = new List<LineRenderer>();
@@ -66,8 +69,6 @@ public class LoadFile : MonoBehaviour
         cat_color.Add("turquoise", new Color32(64,224,208,255));
 
         particles = new Dictionary<string, ParticleSystem.Particle>();
-
-        Random rnd = new Random();
 
         for(int cat = 0; cat < categories.Length - 1; cat++) {
             string[] content = categories[cat].Split(',');
@@ -134,33 +135,31 @@ public class LoadFile : MonoBehaviour
         alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
         int num_particles = ps.GetParticles(alive_particles);
 
-
-
-         if (m_RelationshipEvent == null)
-            m_RelationshipEvent = new UnityEvent();
-
-        m_RelationshipEvent.AddListener(Draw);
+        go_line = new GameObject("line_pointer");
+        lr_line = go_line.AddComponent<LineRenderer>() as LineRenderer;
+        //lr = GetComponent<LineRenderer>();
+        lr_line.material = new Material(Shader.Find("Sprites/Default"));
     }
 
     void Update(){
-        if(OVRInput.Get(OVRInput.Axis1D.SecondaryIndexTrigger) > 0.75){
-            m_RelationshipEvent.Invoke();
-        }
-        
-    }
-     void Draw(){
-        //Vect or3 controllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote) + body.position;
-        Vector3 controllerPosition = rayController.transform.position + body.position;
+        Vector3 controllerPosition = body.position;
+        //Vector3 controllerPosition = rayController.transform.position + body.position;
         Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
         Vector3 controllerDirection = controllerRotation * Vector3.forward * 10;
         Ray controllerRay = new Ray(controllerPosition, controllerDirection);
-        
 
-        Debug.DrawRay(controllerPosition, controllerDirection, Color.green);
+        Vector3[] vs_lr = new Vector3[2];
+        vs_lr[0] = controllerPosition;
+        vs_lr[1] = controllerDirection;
+
+        lr_line.positionCount = vs_lr.Length;
+        lr_line.SetPositions(vs_lr);
+
+        Debug.DrawRay(controllerPosition, controllerDirection, Color.red);
 
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
-        float min_distance = 100.0f;
+        float min_distance = 50.0f;
 
         foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles) {
             Vector3 pos = transform.InverseTransformPoint(item.Value.position);
@@ -178,7 +177,7 @@ public class LoadFile : MonoBehaviour
             }
         }
 
-        if(min_distance < 100.0f) {
+        if(min_distance < 50.0f) {
             gene_position.position = gene_pos;
             gene_position.LookAt(2 * gene_position.position - body.position);
             gene_name.text = gene_string;
@@ -189,8 +188,9 @@ public class LoadFile : MonoBehaviour
                 {
                     foreach(string remote_gene in particle_relations[gene_string]) {
                         GameObject obj = new GameObject("line");
+                        Debug.Log("line");
                         LineRenderer lr = obj.AddComponent<LineRenderer>() as LineRenderer;
-                        lr.material = material;
+                        lr.material = new Material(Shader.Find("Sprites/Default"));
                         Vector3[] vs = new Vector3[2];
                         vs[0] = particles[remote_gene].position;
                         vs[1] = particles[gene_string].position;
@@ -209,5 +209,9 @@ public class LoadFile : MonoBehaviour
             }
             lines.Clear();
         } 
+        
+    }
+     void Draw(){
+        
      }
 }
