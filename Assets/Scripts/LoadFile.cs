@@ -22,6 +22,7 @@ public class LoadFile : MonoBehaviour
     private Dictionary<string, ParticleSystem.Particle> particles;
     private Dictionary<string, List<string>> particle_relations;
     private List<LineRenderer> lines;
+    private int num_particles;
     UnityEvent m_RelationshipEvent;
 
     // Filtrering
@@ -136,7 +137,7 @@ public class LoadFile : MonoBehaviour
         IEnumerable<ParticleSystem.Particle> vals = particles_real.Values;
         ps.SetParticles(vals.ToArray());
         alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
-        int num_particles = ps.GetParticles(alive_particles);
+        num_particles = ps.GetParticles(alive_particles);
     }
 
     void Update(){
@@ -204,26 +205,25 @@ public class LoadFile : MonoBehaviour
 
     public void FilterPink()
     {
-        Color changeColor = new Color(255, 128, 255, 0);
-        ParticleSystem.Particle newParticle;
-        //ParticleSystem.Particle[] changeParticles = new ParticleSystem.Particle[ps.particleCount];
+        Color32 changeColor = new Color32(255, 128, 255, 0);
+        ParticleSystem.Particle[] m_Particles;
+        m_Particles = ps.GetParticles();
+
 
         if (isFilterPink)
         {
             changeColor.a = 255;
         }
 
-        foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles.ToArray()){
-            if(item.Value.startColor.r == 255 && item.Value.startColor.g == 128 && item.Value.startColor.b == 255)
+        for(int i = 0; i < particles.Count; i++)
+        {
+            if (m_Particles[i].startColor.r == 255 && m_Particles[i].startColor.g == 128 && m_Particles[i].startColor.b == 255)
             {
-                newParticle = particles[item.Key];
-                newParticle.startColor = changeColor;
-                particles[item.Key] = newParticle;
+                m_Particles[i].startColor = Color.blue;
             }
         }
 
-        ps.SetParticles(particles.Values.ToArray(), ps.GetParticles(alive_particles));
-
+        ps.SetParticles(m_Particles, num_particles);
         isFilterPink = !isFilterPink;
     }
         
