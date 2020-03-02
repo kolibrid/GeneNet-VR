@@ -24,6 +24,9 @@ public class LoadFile : MonoBehaviour
     private List<LineRenderer> lines;
     UnityEvent m_RelationshipEvent;
 
+    // Filtrering
+    protected bool isFilterPink = false;
+
     private GameObject go_line;
     private LineRenderer lr_line;
 
@@ -134,11 +137,6 @@ public class LoadFile : MonoBehaviour
         ps.SetParticles(vals.ToArray());
         alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
         int num_particles = ps.GetParticles(alive_particles);
-
-        go_line = new GameObject("line_pointer");
-        lr_line = go_line.AddComponent<LineRenderer>() as LineRenderer;
-        //lr = GetComponent<LineRenderer>();
-        lr_line.material = new Material(Shader.Find("Sprites/Default"));
     }
 
     void Update(){
@@ -147,13 +145,6 @@ public class LoadFile : MonoBehaviour
         Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
         Vector3 controllerDirection = controllerRotation * Vector3.forward * 10;
         Ray controllerRay = new Ray(controllerPosition, controllerDirection);
-
-        Vector3[] vs_lr = new Vector3[2];
-        vs_lr[0] = controllerPosition;
-        vs_lr[1] = controllerDirection;
-
-        lr_line.positionCount = vs_lr.Length;
-        lr_line.SetPositions(vs_lr);
 
         Debug.DrawRay(controllerPosition, controllerDirection, Color.red);
 
@@ -188,7 +179,6 @@ public class LoadFile : MonoBehaviour
                 {
                     foreach(string remote_gene in particle_relations[gene_string]) {
                         GameObject obj = new GameObject("line");
-                        Debug.Log("line");
                         LineRenderer lr = obj.AddComponent<LineRenderer>() as LineRenderer;
                         lr.material = new Material(Shader.Find("Sprites/Default"));
                         Vector3[] vs = new Vector3[2];
@@ -211,7 +201,30 @@ public class LoadFile : MonoBehaviour
         } 
         
     }
-     void Draw(){
+
+    public void FilterPink()
+    {
+        Color changeColor = new Color(255, 128, 255, 0);
+        ParticleSystem.Particle newParticle;
+        //ParticleSystem.Particle[] changeParticles = new ParticleSystem.Particle[ps.particleCount];
+
+        if (isFilterPink)
+        {
+            changeColor.a = 255;
+        }
+
+        foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles.ToArray()){
+            if(item.Value.startColor.r == 255 && item.Value.startColor.g == 128 && item.Value.startColor.b == 255)
+            {
+                newParticle = particles[item.Key];
+                newParticle.startColor = changeColor;
+                particles[item.Key] = newParticle;
+            }
+        }
+
+        ps.SetParticles(particles.Values.ToArray(), ps.GetParticles(alive_particles));
+
+        isFilterPink = !isFilterPink;
+    }
         
-     }
 }
