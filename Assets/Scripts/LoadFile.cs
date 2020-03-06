@@ -160,15 +160,16 @@ public class LoadFile : MonoBehaviour
 
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
-        float min_distance = 50.0f;
+        float min_distance = 20.0f;
 
         foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles) {
             Vector3 pos = transform.InverseTransformPoint(item.Value.position);
-            float size = item.Value.startSize;
+            float size = item.Value.startSize * 200;
 
             float distance = Vector3.Cross(controllerRay.direction, pos - controllerRay.origin).magnitude;
 
             if(distance < size){
+                Debug.Log($"distance is {distance} and size is {size}");
                 float current_distance = (pos - controllerRay.origin).magnitude;
                 if(current_distance < min_distance) {
                     min_distance = current_distance;
@@ -184,7 +185,7 @@ public class LoadFile : MonoBehaviour
             gene_name.text = gene_string;
             gene_name2.text = gene_string;
             gene_name2.transform.position = gene_position.position;
-            if(lines.Count < 10) {
+            if(lines.Count < 50) {
                 try 
                 {
                     foreach(string remote_gene in particle_relations[gene_string]) {
@@ -201,6 +202,8 @@ public class LoadFile : MonoBehaviour
                 }
                 catch
                 {
+                   
+                
                 }
             }
         } else {
@@ -242,96 +245,6 @@ public class LoadFile : MonoBehaviour
         isFilterPink = !isFilterPink;
 
         ps.SetParticles(m_Particles, numParticlesAlive);
-
-        //BuildNetwork("pink");
-    }
-
-    private void BuildNetwork(string color)
-    {
-        particle_color = new Color32(255, 0, 0, 255);
-        particles = new Dictionary<string, ParticleSystem.Particle>();
-
-        for (int cat = 0; cat < categories.Length - 1; cat++)
-        {
-            string[] content = categories[cat].Split(',');
-            string[] genes = content[1].Split(' ');
-           
-            if (content[0] == color)
-            {
-                particle_color = cat_color[content[0]];
-                for (int gene = 0; gene < genes.Length; gene++)
-                {
-                    ParticleSystem.Particle new_particle = new ParticleSystem.Particle();
-                    new_particle.remainingLifetime = 100000.0f;
-                    new_particle.startLifetime = 100000.0f;
-                    new_particle.startSize = 0.1f;
-                    new_particle.startColor = particle_color;
-                    new_particle.position = new Vector3(Random.value * 50, Random.value * 10, Random.value * 50);
-                    particles[genes[gene]] = new_particle;
-                }
-            }
-        }
-
-        List<string> keys = Enumerable.ToList(particles.Keys);
-        particle_relations = new Dictionary<string, List<string>>();
-        int size = keys.Count;
-        for (int it = 0; it < 10; it++)
-        {
-            for (int conn = 1; conn < words.Length - 1; conn++)
-            {
-                string[] elems = words[conn].Split(',');
-                string gene1 = elems[0].Replace("\"", string.Empty);
-                gene1 = gene1.Replace(",", string.Empty);
-
-                string gene2 = elems[1].Replace("\"", string.Empty);
-                gene2 = gene2.Replace(",", string.Empty);
-
-                if (!particle_relations.ContainsKey(gene1))
-                {
-                    particle_relations[gene1] = new List<string>();
-                }
-                particle_relations[gene1].Add(gene2);
-
-                if (!particle_relations.ContainsKey(gene2))
-                {
-                    particle_relations[gene2] = new List<string>();
-                }
-                particle_relations[gene2].Add(gene1);
-
-
-                try
-                {
-                    int randint = (int)(Random.value * size);
-                    ParticleSystem.Particle particle = particles[gene1];
-                    Vector3 avoid_direction = particle.position - particles[keys[randint]].position;
-                    particle.position += avoid_direction.normalized / 10;
-                    Vector3 direction = particles[gene2].position - particle.position;
-                    particle.position += direction.normalized / 5;
-                    particles[gene1] = particle;
-                }
-                catch
-                {
-                    continue;
-                }
-            }
-        }
-
-        particles_real = new Dictionary<string, ParticleSystem.Particle>();
-        foreach (var p in particles.Keys)
-        {
-            if (particle_relations.ContainsKey(p))
-            {
-                particles_real[p] = particles[p];
-            }
-        }
-
-        IEnumerable<ParticleSystem.Particle> vals = particles_real.Values;
-        var main = ps.main;
-        main.maxParticles = vals.Count();
-
-        ps.SetParticles(vals.ToArray());
-        alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
-        num_particles = ps.GetParticles(alive_particles);
     }
         
 }
