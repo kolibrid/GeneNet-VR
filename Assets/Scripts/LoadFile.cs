@@ -21,12 +21,17 @@ public class LoadFile : MonoBehaviour
     private ParticleSystem.Particle[] alive_particles;
     private Dictionary<string, ParticleSystem.Particle> particles;
     private Dictionary<string, List<string>> particle_relations;
+    private Dictionary<string, ParticleSystem.Particle> particles_real;
     private List<LineRenderer> lines;
     private int num_particles;
     UnityEvent m_RelationshipEvent;
 
     // Filtrering
     protected bool isFilterPink = false;
+
+    private string[] categories;
+    Dictionary<string, Color32> cat_color;
+    Color32 particle_color;
 
     private GameObject go_line;
     private LineRenderer lr_line;
@@ -39,15 +44,16 @@ public class LoadFile : MonoBehaviour
         words = ta.text.Split('\n');
 
         TextAsset categories_text = Resources.Load<TextAsset>("blood-categories");
-        string[] categories = categories_text.text.Split('\n');
+        categories = categories_text.text.Split('\n');
 
         counter = 1;
 
         ps = GetComponent<ParticleSystem>();
-        Color32 particle_color = new Color32(255,0,0,255);
+        particle_color = new Color32(255,0,0,255);
 
         // Cluster colours
-        Dictionary<string, Color32> cat_color = new Dictionary<string, Color32>();
+        cat_color = new Dictionary<string, Color32>();
+
         cat_color.Add("black", new Color32(0,0,0,255));
         cat_color.Add("blue", new Color32(0,0,255,255));
         cat_color.Add("white", new Color32(255,255,255,255));
@@ -127,7 +133,7 @@ public class LoadFile : MonoBehaviour
             }
         }
 
-        Dictionary<string, ParticleSystem.Particle>particles_real = new Dictionary<string, ParticleSystem.Particle>();
+        particles_real = new Dictionary<string, ParticleSystem.Particle>();
         foreach(var p in particles.Keys) {
             if(particle_relations.ContainsKey(p)) {
                 particles_real[p] = particles[p];
@@ -135,6 +141,9 @@ public class LoadFile : MonoBehaviour
         }
 
         IEnumerable<ParticleSystem.Particle> vals = particles_real.Values;
+        var main = ps.main;
+        main.maxParticles = vals.Count();
+
         ps.SetParticles(vals.ToArray());
         alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
         num_particles = ps.GetParticles(alive_particles);
@@ -205,26 +214,124 @@ public class LoadFile : MonoBehaviour
 
     public void FilterPink()
     {
-        Color32 changeColor = new Color32(255, 128, 255, 0);
+        Color32 changeColor = new Color32(0, 0, 0, 255);
+        List<string> keys = Enumerable.ToList(particles_real.Keys);
         ParticleSystem.Particle[] m_Particles;
-        m_Particles = ps.GetParticles();
+        int numParticlesAlive;
 
+        m_Particles = new ParticleSystem.Particle[ps.main.maxParticles];
+        numParticlesAlive = ps.GetParticles(m_Particles);
+
+        Debug.Log($"numParticlesAlive {numParticlesAlive}");
 
         if (isFilterPink)
         {
             changeColor.a = 255;
         }
 
-        for(int i = 0; i < particles.Count; i++)
+        for (int i = 0; i < numParticlesAlive; i++)
         {
-            if (m_Particles[i].startColor.r == 255 && m_Particles[i].startColor.g == 128 && m_Particles[i].startColor.b == 255)
+            string key = keys[i];
+
+            if (m_Particles[i].startColor.r != 255 && m_Particles[i].startColor.g != 128 && m_Particles[i].startColor.b != 255)
             {
-                m_Particles[i].startColor = Color.blue;
+                m_Particles[i].startColor = changeColor;
             }
         }
 
-        ps.SetParticles(m_Particles, num_particles);
         isFilterPink = !isFilterPink;
+
+        ps.SetParticles(m_Particles, numParticlesAlive);
+
+        //BuildNetwork("pink");
+    }
+
+    private void BuildNetwork(string color)
+    {
+        particle_color = new Color32(255, 0, 0, 255);
+        particles = new Dictionary<string, ParticleSystem.Particle>();
+
+        for (int cat = 0; cat < categories.Length - 1; cat++)
+        {
+            string[] content = categories[cat].Split(',');
+            string[] genes = content[1].Split(' ');
+           
+            if (content[0] == color)
+            {
+                particle_color = cat_color[content[0]];
+                for (int gene = 0; gene < genes.Length; gene++)
+                {
+                    ParticleSystem.Particle new_particle = new ParticleSystem.Particle();
+                    new_particle.remainingLifetime = 100000.0f;
+                    new_particle.startLifetime = 100000.0f;
+                    new_particle.startSize = 0.1f;
+                    new_particle.startColor = particle_color;
+                    new_particle.position = new Vector3(Random.value * 50, Random.value * 10, Random.value * 50);
+                    particles[genes[gene]] = new_particle;
+                }
+            }
+        }
+
+        List<string> keys = Enumerable.ToList(particles.Keys);
+        particle_relations = new Dictionary<string, List<string>>();
+        int size = keys.Count;
+        for (int it = 0; it < 10; it++)
+        {
+            for (int conn = 1; conn < words.Length - 1; conn++)
+            {
+                string[] elems = words[conn].Split(',');
+                string gene1 = elems[0].Replace("\"", string.Empty);
+                gene1 = gene1.Replace(",", string.Empty);
+
+                string gene2 = elems[1].Replace("\"", string.Empty);
+                gene2 = gene2.Replace(",", string.Empty);
+
+                if (!particle_relations.ContainsKey(gene1))
+                {
+                    particle_relations[gene1] = new List<string>();
+                }
+                particle_relations[gene1].Add(gene2);
+
+                if (!particle_relations.ContainsKey(gene2))
+                {
+                    particle_relations[gene2] = new List<string>();
+                }
+                particle_relations[gene2].Add(gene1);
+
+
+                try
+                {
+                    int randint = (int)(Random.value * size);
+                    ParticleSystem.Particle particle = particles[gene1];
+                    Vector3 avoid_direction = particle.position - particles[keys[randint]].position;
+                    particle.position += avoid_direction.normalized / 10;
+                    Vector3 direction = particles[gene2].position - particle.position;
+                    particle.position += direction.normalized / 5;
+                    particles[gene1] = particle;
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+        }
+
+        particles_real = new Dictionary<string, ParticleSystem.Particle>();
+        foreach (var p in particles.Keys)
+        {
+            if (particle_relations.ContainsKey(p))
+            {
+                particles_real[p] = particles[p];
+            }
+        }
+
+        IEnumerable<ParticleSystem.Particle> vals = particles_real.Values;
+        var main = ps.main;
+        main.maxParticles = vals.Count();
+
+        ps.SetParticles(vals.ToArray());
+        alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
+        num_particles = ps.GetParticles(alive_particles);
     }
         
 }
