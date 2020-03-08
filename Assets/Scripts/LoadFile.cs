@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
-using System.Linq;
 using System;
+using UnityEngine.UI;
 
 public class LoadFile : MonoBehaviour
 {
@@ -30,8 +30,6 @@ public class LoadFile : MonoBehaviour
     UnityEvent m_RelationshipEvent;
 
     // Filtrering
-    protected bool isFilterPink = false;
-
     private string[] categories;
     private Dictionary<string, string[]> oncoGroups;
     Dictionary<string, Color32> cat_color;
@@ -169,7 +167,7 @@ public class LoadFile : MonoBehaviour
     }
 
     void Update(){
-        Vector3 controllerPosition = body.position;
+        /* Vector3 controllerPosition = body.position;
         //Vector3 controllerPosition = rayController.transform.position + body.position;
         Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
         Vector3 controllerDirection = controllerRotation * Vector3.forward * 10;
@@ -230,28 +228,28 @@ public class LoadFile : MonoBehaviour
                 Destroy(line);
             }
             lines.Clear();
-        } 
+        }  */
         
     }
 
-    public void FilterNFE2L2V2()
+    public void FilterGenes(Text label)
     {
-        Color32 changeColor = new Color32(0, 0, 0, 255);
+        Color32 changeColor = new Color32(1, 1, 1, 255);
         string[] keys = Enumerable.ToArray(particles_real.Keys);
         ParticleSystem.Particle[] m_Particles;
         int numParticlesAlive;
-        string[] NFE2L2V2 = oncoGroups["NFE2L2.V2"];
+        string[] group = oncoGroups[label.text];
 
         m_Particles = new ParticleSystem.Particle[ps.main.maxParticles];
         numParticlesAlive = ps.GetParticles(m_Particles);
 
-        for (int i = 0; i < NFE2L2V2.Count(); i++)
+        for (int i = 0; i < group.Count(); i++)
         {
-            string gene = NFE2L2V2[i];
+            string gene = group[i];
             if (keys.Contains(gene))
             {
                 int index = Array.IndexOf(keys, gene);
-                if (isFilterPink)
+                if (m_Particles[index].startColor.r == 1)
                 {
                     changeColor = gene_color[gene];
                     m_Particles[index].startColor = changeColor;
@@ -262,8 +260,6 @@ public class LoadFile : MonoBehaviour
                 }
             }
         }
-
-        isFilterPink = !isFilterPink;
 
         ps.SetParticles(m_Particles, numParticlesAlive);
     }
