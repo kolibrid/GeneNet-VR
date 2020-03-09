@@ -18,8 +18,8 @@ public class LoadFile : MonoBehaviour
     private Dictionary<string, ParticleSystem.Particle> particlesBlood;
     private Dictionary<string, ParticleSystem.Particle> particlesBiopsy;
     private Dictionary<string, List<string>> particle_relations;
-    private Dictionary<string, ParticleSystem.Particle> particles_real;
-    private Dictionary<string, Color32> gene_color;
+    private Dictionary<string, Color32> geneColorBlood;
+    private Dictionary<string, Color32> geneColorBiopsy;
     private List<LineRenderer> lines;
     private Dictionary<string, string[]> oncoGroups;
     private Dictionary<string, Color32> cat_color;
@@ -38,8 +38,9 @@ public class LoadFile : MonoBehaviour
         particles = new Dictionary<string, ParticleSystem.Particle>();
         
         // Initialize Dictionary to store information about each gene and its color
-        gene_color = new Dictionary<string, Color32>();
-        
+        geneColorBlood = new Dictionary<string, Color32>();
+        geneColorBiopsy = new Dictionary<string, Color32>();
+
         // Initialize OncoGroups
         InitializeOncoGroups();
         
@@ -57,82 +58,93 @@ public class LoadFile : MonoBehaviour
         particlesBlood = InitializeNetwork("blood-network", "blood-categories");
         // Initialize network and categories from Biopsy sample
         particlesBiopsy = InitializeNetwork("biopsy-network", "biopsy-categories");
-      
+        
+        // Start network with the particles from the blood dataset
         var main = ps.main;
         main.maxParticles = particlesBlood.Values.Count();
-
         ps.SetParticles(particlesBlood.Values.ToArray());
     }
 
     void Update(){
-        // Vector3 controllerPosition = body.position;
-        // //Vector3 controllerPosition = rayController.transform.position + body.position;
-        // Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
-        // Vector3 controllerDirection = controllerRotation * Vector3.forward * 10;
-        // Ray controllerRay = new Ray(controllerPosition, controllerDirection);
+        Vector3 controllerPosition = body.position;
+        //Vector3 controllerPosition = rayController.transform.position + body.position;
+        Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
+        Vector3 controllerDirection = controllerRotation * Vector3.forward * 10;
+        Ray controllerRay = new Ray(controllerPosition, controllerDirection);
+        Dictionary<string, ParticleSystem.Particle> particles = new Dictionary<string, ParticleSystem.Particle>();
+        particles = isBlood ? particlesBlood : particlesBiopsy;
 
-        // Debug.DrawRay(controllerPosition, controllerDirection, Color.red);
+        Debug.DrawRay(controllerPosition, controllerDirection, Color.red);
 
-        // string gene_string = "";
-        // Vector3 gene_pos = new Vector3();
-        // float min_distance = 20.0f;
+        string gene_string = "";
+        Vector3 gene_pos = new Vector3();
+        float min_distance = 20.0f;
 
-        // foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles) {
-        //     Vector3 pos = transform.InverseTransformPoint(item.Value.position);
-        //     float size = item.Value.startSize * 200;
+        foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles)
+        {
+            Vector3 pos = transform.InverseTransformPoint(item.Value.position);
+            float size = item.Value.startSize * 200;
 
-        //     float distance = Vector3.Cross(controllerRay.direction, pos - controllerRay.origin).magnitude;
+            float distance = Vector3.Cross(controllerRay.direction, pos - controllerRay.origin).magnitude;
 
-        //     if(distance < size){
-        //         //Debug.Log($"distance is {distance} and size is {size}");
-        //         float current_distance = (pos - controllerRay.origin).magnitude;
-        //         if(current_distance < min_distance) {
-        //             min_distance = current_distance;
-        //             gene_pos = pos;
-        //             gene_string = item.Key;
-        //         }
-        //     }
-        // }
+            if (distance < size)
+            {
+                //Debug.Log($"distance is {distance} and size is {size}");
+                float current_distance = (pos - controllerRay.origin).magnitude;
+                if (current_distance < min_distance)
+                {
+                    min_distance = current_distance;
+                    gene_pos = pos;
+                    gene_string = item.Key;
+                }
+            }
+        }
 
-        // if(min_distance < 50.0f) {
-        //     gene_position.position = gene_pos;
-        //     gene_position.LookAt(2 * gene_position.position - body.position);
-        //     gene_name.text = gene_string;
-        //     gene_name2.text = gene_string;
-        //     gene_name2.transform.position = gene_position.position;
-        //     if(lines.Count < 50) {
-        //         try 
-        //         {
-        //             foreach(string remote_gene in particle_relations[gene_string]) {
-        //                 GameObject obj = new GameObject("line");
-        //                 LineRenderer lr = obj.AddComponent<LineRenderer>() as LineRenderer;
-        //                 lr.material = new Material(Shader.Find("Sprites/Default"));
-        //                 Vector3[] vs = new Vector3[2];
-        //                 vs[0] = particles[remote_gene].position;
-        //                 vs[1] = particles[gene_string].position;
-        //                 lr.positionCount = vs.Length;
-        //                 lr.SetPositions(vs);
-        //                 lines.Add(lr);
-        //             }   
-        //         }
-        //         catch
-        //         {
-                   
-                
-        //         }
-        //     }
-        // } else {
-        //     foreach(LineRenderer line in lines) {
-        //         Destroy(line);
-        //     }
-        //     lines.Clear();
-        // } 
+        //if (min_distance < 50.0f)
+        //{
+        //    gene_position.position = gene_pos;
+        //    gene_position.LookAt(2 * gene_position.position - body.position);
+        //    gene_name.text = gene_string;
+        //    gene_name2.text = gene_string;
+        //    gene_name2.transform.position = gene_position.position;
+        //    if (lines.Count < 50)
+        //    {
+        //        try
+        //        {
+        //            foreach (string remote_gene in particle_relations[gene_string])
+        //            {
+        //                GameObject obj = new GameObject("line");
+        //                LineRenderer lr = obj.AddComponent<LineRenderer>() as LineRenderer;
+        //                lr.material = new Material(Shader.Find("Sprites/Default"));
+        //                Vector3[] vs = new Vector3[2];
+        //                vs[0] = particles[remote_gene].position;
+        //                vs[1] = particles[gene_string].position;
+        //                lr.positionCount = vs.Length;
+        //                lr.SetPositions(vs);
+        //                lines.Add(lr);
+        //            }
+        //        }
+        //        catch
+        //        {
+
+
+        //        }
+        //    }
+        //}
+        //else
+        //{
+        //    foreach (LineRenderer line in lines)
+        //    {
+        //        Destroy(line);
+        //    }
+        //    lines.Clear();
+        //}
     }
 
     // Filter genes method for the toggle menu
     public void FilterGenes(Text label)
     {
-        Color32 changeColor = new Color32(1, 1, 1, 255);
+        Color32 changeColor = new Color32(0, 0, 0, 255);
         string[] keys = Enumerable.ToArray(isBlood ? particlesBlood.Keys : particlesBiopsy.Keys);
         ParticleSystem.Particle[] m_Particles;
         int numParticlesAlive;
@@ -147,9 +159,9 @@ public class LoadFile : MonoBehaviour
             if (keys.Contains(gene))
             {
                 int index = Array.IndexOf(keys, gene);
-                if (m_Particles[index].startColor.r == 1)
+                if (m_Particles[index].startColor.r == 0)
                 {
-                    changeColor = gene_color[gene];
+                    changeColor = isBlood ? geneColorBlood[gene] : geneColorBiopsy[gene];
                     m_Particles[index].startColor = changeColor;
                 }
                 else
@@ -173,13 +185,16 @@ public class LoadFile : MonoBehaviour
             main.maxParticles = numParticles;
             ps.SetParticles(particlesBlood.Values.ToArray(), numParticles);
         }
+
+        isBlood = !isBlood;
+
+        resetToggleMenu();
     }
 
     private void InitializeColors(){
         // Cluster colours
         cat_color = new Dictionary<string, Color32>();
 
-        cat_color.Add("black", new Color32(0,0,0,255));
         cat_color.Add("blue", new Color32(0,0,255,255));
         cat_color.Add("white", new Color32(255,255,255,255));
         cat_color.Add("yellow", new Color32(255,255,0,255));
@@ -226,6 +241,7 @@ public class LoadFile : MonoBehaviour
         // We load the network and categories files and save the information in arrays
         string[] network = Resources.Load<TextAsset>(networkName).text.Split('\n');
         string[] categories = Resources.Load<TextAsset>(networkCategories).text.Split('\n');
+        bool isBiopsy = (networkName == "biopsy-network") ? true : false;
 
         Dictionary<string, ParticleSystem.Particle> particleDict = new Dictionary<string, ParticleSystem.Particle>();
 
@@ -242,7 +258,14 @@ public class LoadFile : MonoBehaviour
                 new_particle.startColor =  particle_color;
                 new_particle.position = new Vector3(UnityEngine.Random.value * 50, UnityEngine.Random.value * 10, UnityEngine.Random.value * 50);
                 particleDict[genes[gene]] = new_particle;
-                gene_color[genes[gene]] = particle_color;
+                if (isBiopsy)
+                {
+                    geneColorBiopsy[genes[gene]] = particle_color;
+                }
+                else
+                {
+                    geneColorBlood[genes[gene]] = particle_color;
+                }
             }
         }
         
@@ -291,6 +314,16 @@ public class LoadFile : MonoBehaviour
         }
 
         return particlesReal;
+    }
+
+    private void resetToggleMenu()
+    {
+        GameObject toggleMenu = GameObject.Find("CanvasMenu/Panel/Toggles");
+        foreach (Transform toggle in toggleMenu.transform)
+        {
+            Toggle t = toggle.GetComponent<Toggle>();
+            t.isOn = true;
+        }
     }
         
 }
