@@ -49,7 +49,78 @@ public class LoadFile : MonoBehaviour
         ps = GetComponent<ParticleSystem>();
         
         // Initialize Network
-        InitializeNetwork();
+        // Initialize network and categories from Blood sample
+        string[] network = Resources.Load<TextAsset>("blood-network").text.Split('\n');
+        string[] categories = Resources.Load<TextAsset>("blood-categories").text.Split('\n');
+
+        for(int cat = 0; cat < categories.Length - 1; cat++) {
+            string[] content = categories[cat].Split(',');
+            string[] genes = content[1].Split(' ');
+            Color32 particle_color = cat_color[content[0]];
+            
+            for(int gene = 0; gene < genes.Length; gene++) {
+                ParticleSystem.Particle new_particle = new ParticleSystem.Particle();
+                new_particle.remainingLifetime = 100000.0f;
+                new_particle.startLifetime = 100000.0f;
+                new_particle.startSize = 0.1f;
+                new_particle.startColor =  particle_color;
+                new_particle.position = new Vector3(UnityEngine.Random.value * 50, UnityEngine.Random.value * 10, UnityEngine.Random.value * 50);
+                particles[genes[gene]] = new_particle;
+                gene_color[genes[gene]] = particle_color;
+            }
+        }
+        
+        List<string> keys = Enumerable.ToList(particles.Keys);
+        particle_relations = new Dictionary<string, List<string>>();
+        int size = keys.Count;
+        for(int it = 0; it < 10; it++) {
+            for(int conn = 1; conn < network.Length - 1; conn++) {
+                string[] elems = network[conn].Split(',');
+                string gene1 = elems[0].Replace("\"", string.Empty);
+                gene1 = gene1.Replace(",", string.Empty);
+
+                string gene2 = elems[1].Replace("\"", string.Empty);
+                gene2 = gene2.Replace(",", string.Empty);
+
+                if(!particle_relations.ContainsKey(gene1)) {
+                    particle_relations[gene1] = new List<string>();                    
+                }
+                particle_relations[gene1].Add(gene2);
+
+                if(!particle_relations.ContainsKey(gene2)) {
+                    particle_relations[gene2] = new List<string>();                    
+                }
+                particle_relations[gene2].Add(gene1);
+
+
+                try {
+                    int randint = (int)(UnityEngine.Random.value * size);
+                    ParticleSystem.Particle particle = particles[gene1];
+                    Vector3 avoid_direction = particle.position - particles[keys[randint]].position;
+                    particle.position += avoid_direction.normalized / 10;
+                    Vector3 direction = particles[gene2].position - particle.position;                    
+                    particle.position += direction.normalized/5;
+                    particles[gene1] = particle;
+                } catch {
+                    continue;
+                }
+            }
+        }
+
+        particles_real = new Dictionary<string, ParticleSystem.Particle>();
+        foreach(var p in particles.Keys) {
+            if(particle_relations.ContainsKey(p)) {
+                particles_real[p] = particles[p];
+            }
+        }
+
+        IEnumerable<ParticleSystem.Particle> vals = particles_real.Values;
+        var main = ps.main;
+        main.maxParticles = vals.Count();
+
+        ps.SetParticles(vals.ToArray());
+        alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
+        num_particles = ps.GetParticles(alive_particles);
     }
 
     void Update(){
@@ -180,6 +251,7 @@ public class LoadFile : MonoBehaviour
         cat_color.Add("turquoise", new Color32(64,224,208,255));
         cat_color.Add("darkorange", new Color32(255,140,0,255));
         cat_color.Add("royalblue", new Color32(0,35,102,255));
+        cat_color.Add("crimsom", new Color32(220,20,60,255));
     }
 
     private void InitializeOncoGroups(){
@@ -194,81 +266,6 @@ public class LoadFile : MonoBehaviour
             string[] genes = content[1].Split(' ');
             oncoGroups[content[0]] = genes;
         }
-    }
-
-    private void InitializeNetwork(){
-        // Initialize network and categories from Blood sample
-        string[] network = Resources.Load<TextAsset>("blood-network").text.Split('\n');
-        string[] categories = Resources.Load<TextAsset>("blood-categories").text.Split('\n');
-
-        for(int cat = 0; cat < categories.Length - 1; cat++) {
-            string[] content = categories[cat].Split(',');
-            string[] genes = content[1].Split(' ');
-            Color32 particle_color = cat_color[content[0]];
-            
-            for(int gene = 0; gene < genes.Length; gene++) {
-                ParticleSystem.Particle new_particle = new ParticleSystem.Particle();
-                new_particle.remainingLifetime = 100000.0f;
-                new_particle.startLifetime = 100000.0f;
-                new_particle.startSize = 0.1f;
-                new_particle.startColor =  particle_color;
-                new_particle.position = new Vector3(UnityEngine.Random.value * 50, UnityEngine.Random.value * 10, UnityEngine.Random.value * 50);
-                particles[genes[gene]] = new_particle;
-                gene_color[genes[gene]] = particle_color;
-            }
-        }
-        
-        List<string> keys = Enumerable.ToList(particles.Keys);
-        particle_relations = new Dictionary<string, List<string>>();
-        int size = keys.Count;
-        for(int it = 0; it < 10; it++) {
-            for(int conn = 1; conn < network.Length - 1; conn++) {
-                string[] elems = network[conn].Split(',');
-                string gene1 = elems[0].Replace("\"", string.Empty);
-                gene1 = gene1.Replace(",", string.Empty);
-
-                string gene2 = elems[1].Replace("\"", string.Empty);
-                gene2 = gene2.Replace(",", string.Empty);
-
-                if(!particle_relations.ContainsKey(gene1)) {
-                    particle_relations[gene1] = new List<string>();                    
-                }
-                particle_relations[gene1].Add(gene2);
-
-                if(!particle_relations.ContainsKey(gene2)) {
-                    particle_relations[gene2] = new List<string>();                    
-                }
-                particle_relations[gene2].Add(gene1);
-
-
-                try {
-                    int randint = (int)(UnityEngine.Random.value * size);
-                    ParticleSystem.Particle particle = particles[gene1];
-                    Vector3 avoid_direction = particle.position - particles[keys[randint]].position;
-                    particle.position += avoid_direction.normalized / 10;
-                    Vector3 direction = particles[gene2].position - particle.position;                    
-                    particle.position += direction.normalized/5;
-                    particles[gene1] = particle;
-                } catch {
-                    continue;
-                }
-            }
-        }
-
-        particles_real = new Dictionary<string, ParticleSystem.Particle>();
-        foreach(var p in particles.Keys) {
-            if(particle_relations.ContainsKey(p)) {
-                particles_real[p] = particles[p];
-            }
-        }
-
-        IEnumerable<ParticleSystem.Particle> vals = particles_real.Values;
-        var main = ps.main;
-        main.maxParticles = vals.Count();
-
-        ps.SetParticles(vals.ToArray());
-        alive_particles = new ParticleSystem.Particle[ps.main.maxParticles];
-        num_particles = ps.GetParticles(alive_particles);
     }
         
 }
