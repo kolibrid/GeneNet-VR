@@ -2796,12 +2796,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 22.863, y: 0, z: 0}
---- !u!4 &382516220 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1812986932406380676, guid: 1950b2150beec924d9cff768bb4e815c,
-    type: 3}
-  m_PrefabInstance: {fileID: 1920055103}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &387927086
 GameObject:
   m_ObjectHideFlags: 0
@@ -6581,8 +6575,6 @@ MonoBehaviour:
   gene_name: {fileID: 475132339}
   gene_name2: {fileID: 376744956}
   gene_position: {fileID: 376744958}
-  rayController: {fileID: 382516220}
-  material: {fileID: 2100000, guid: a47ec3a6ba79d0949b7f409469ffc670, type: 2}
 --- !u!199 &1026996565
 ParticleSystemRenderer:
   serializedVersion: 6
@@ -16251,11 +16243,22 @@ MonoBehaviour:
   m_Direction: 0
   m_MinValue: 0
   m_MaxValue: 1
-  m_WholeNumbers: 0
+  m_WholeNumbers: 1
   m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1026996564}
+        m_MethodName: ChangeDataset
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1001 &2080299333
 PrefabInstance:
   m_ObjectHideFlags: 0
