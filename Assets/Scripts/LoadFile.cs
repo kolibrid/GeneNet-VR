@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -14,10 +13,10 @@ public class LoadFile : MonoBehaviour
     public Transform gene_position;
 
     private ParticleSystem ps;
-    private Dictionary<string, ParticleSystem.Particle> particles;
     private Dictionary<string, ParticleSystem.Particle> particlesBlood;
     private Dictionary<string, ParticleSystem.Particle> particlesBiopsy;
-    private Dictionary<string, List<string>> particle_relations;
+    private Dictionary<string, List<string>> networkBlood;
+    private Dictionary<string, List<string>> networkBiopsy;
     private Dictionary<string, Color32> geneColorBlood;
     private Dictionary<string, Color32> geneColorBiopsy;
     private List<LineRenderer> lines;
@@ -32,10 +31,6 @@ public class LoadFile : MonoBehaviour
     {
         // Inizialize lines for the eges of the network
         lines = new List<LineRenderer>();
-
-        // Initialize particle dictionary to store informaiton about the gene name
-        // and its particle in the network
-        particles = new Dictionary<string, ParticleSystem.Particle>();
         
         // Initialize Dictionary to store information about each gene and its color
         geneColorBlood = new Dictionary<string, Color32>();
@@ -69,16 +64,18 @@ public class LoadFile : MonoBehaviour
         Vector3 controllerPosition = body.position;
         //Vector3 controllerPosition = rayController.transform.position + body.position;
         Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
-        Vector3 controllerDirection = controllerRotation * Vector3.forward * 10;
+        Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
         Ray controllerRay = new Ray(controllerPosition, controllerDirection);
         Dictionary<string, ParticleSystem.Particle> particles = new Dictionary<string, ParticleSystem.Particle>();
+        Dictionary<string, List<string>> particle_relations;
         particles = isBlood ? particlesBlood : particlesBiopsy;
+        particle_relations = isBlood ? networkBlood : networkBiopsy;
 
-        Debug.DrawRay(controllerPosition, controllerDirection, Color.red);
+        Debug.DrawRay(controllerPosition, controllerDirection*10, Color.red);
 
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
-        float min_distance = 20.0f;
+        float min_distance = 100.0f;
 
         foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles)
         {
@@ -89,56 +86,64 @@ public class LoadFile : MonoBehaviour
 
             if (distance < size)
             {
-                //Debug.Log($"distance is {distance} and size is {size}");
+                //Debug.Log($"distance is {distance}, size is {size} and min_distance is {min_distance}");
                 float current_distance = (pos - controllerRay.origin).magnitude;
                 if (current_distance < min_distance)
                 {
                     min_distance = current_distance;
                     gene_pos = pos;
                     gene_string = item.Key;
+                    //Debug.Log($"The name of the gene that is closer is {gene_string} and min_distance is {min_distance}");
                 }
             }
         }
 
-        //if (min_distance < 50.0f)
-        //{
-        //    gene_position.position = gene_pos;
-        //    gene_position.LookAt(2 * gene_position.position - body.position);
-        //    gene_name.text = gene_string;
-        //    gene_name2.text = gene_string;
-        //    gene_name2.transform.position = gene_position.position;
-        //    if (lines.Count < 50)
-        //    {
-        //        try
-        //        {
-        //            foreach (string remote_gene in particle_relations[gene_string])
-        //            {
-        //                GameObject obj = new GameObject("line");
-        //                LineRenderer lr = obj.AddComponent<LineRenderer>() as LineRenderer;
-        //                lr.material = new Material(Shader.Find("Sprites/Default"));
-        //                Vector3[] vs = new Vector3[2];
-        //                vs[0] = particles[remote_gene].position;
-        //                vs[1] = particles[gene_string].position;
-        //                lr.positionCount = vs.Length;
-        //                lr.SetPositions(vs);
-        //                lines.Add(lr);
-        //            }
-        //        }
-        //        catch
-        //        {
+        //Debug.Log($"The name of the gene that is closer is {gene_string} and min_distance is {min_distance}");
+        //Debug.Log($"It is {(particle_relations.ContainsKey(gene_string))}");
 
+        if (min_distance < 50.0f && gene_string != "" && particle_relations.ContainsKey(gene_string))
+        {
+            gene_position.position = gene_pos;
+            gene_position.LookAt(2 * gene_position.position - body.position);
+            gene_name.text = gene_string;
+            gene_name2.text = gene_string;
+            gene_name2.transform.position = gene_position.position;
 
-        //        }
-        //    }
-        //}
-        //else
-        //{
-        //    foreach (LineRenderer line in lines)
-        //    {
-        //        Destroy(line);
-        //    }
-        //    lines.Clear();
-        //}
+            Debug.Log($"Drawing lines for gene {gene_string}");
+
+            if (lines.Count < 50)
+            {
+                foreach (string remote_gene in particle_relations[gene_string])
+                {
+                    try
+                    {
+                        GameObject obj = new GameObject("line");
+                        LineRenderer lr = obj.AddComponent<LineRenderer>() as LineRenderer;
+                        lr.material = new Material(Shader.Find("Sprites/Default"));
+                        Vector3[] vs = new Vector3[2];
+                        vs[0] = particles[remote_gene].position;
+                        vs[1] = particles[gene_string].position;
+                        lr.positionCount = vs.Length;
+                        lr.SetPositions(vs);
+                        lines.Add(lr);
+                    }
+                    catch (InvalidCastException e)
+                    {
+                        Debug.Log($"There was an error adding a line: {e}");
+                    }
+
+                }
+                //Debug.Log($"Number of lines is {lines.Count}");
+            }
+        }
+        else
+        {
+            foreach (LineRenderer line in lines)
+            {
+                Destroy(line);
+            }
+            lines.Clear();
+        }
     }
 
     // Filter genes method for the toggle menu
@@ -193,34 +198,35 @@ public class LoadFile : MonoBehaviour
 
     private void InitializeColors(){
         // Cluster colours
-        cat_color = new Dictionary<string, Color32>();
-
-        cat_color.Add("blue", new Color32(0,0,255,255));
-        cat_color.Add("white", new Color32(255,255,255,255));
-        cat_color.Add("yellow", new Color32(255,255,0,255));
-        cat_color.Add("cyan", new Color32(0,255,255,255));
-        cat_color.Add("lightcyan", new Color32(244,255,255,255));
-        cat_color.Add("darkgreen", new Color32(0,128,0,255));
-        cat_color.Add("darkgrey", new Color32(50,50,50,255));
-        cat_color.Add("darkred", new Color32(128,0,0,255));
-        cat_color.Add("darkturquoise", new Color32(0,128,128,255));
-        cat_color.Add("green", new Color32(0,255,0,255));
-        cat_color.Add("grey60", new Color32(128,128,128,255));
-        cat_color.Add("magenta", new Color32(255,0,255,255));
-        cat_color.Add("midnightblue", new Color32(0,0,128,255));
-        cat_color.Add("lightyellow", new Color32(255,255,128,255));
-        cat_color.Add("pink", new Color32(255,128,255,255));
-        cat_color.Add("purple", new Color32(128,0,128,255));
-        cat_color.Add("violet", new Color32(238,130,238,255));
-        cat_color.Add("saddlebrown", new Color32(139,69,19,255));
-        cat_color.Add("brown", new Color32(165,42,42,255));
-        cat_color.Add("tan", new Color32(210,180,140,255));
-        cat_color.Add("salmon", new Color32(233,150,122,255));
-        cat_color.Add("greenyellow", new Color32(173,255,47,255));
-        cat_color.Add("turquoise", new Color32(64,224,208,255));
-        cat_color.Add("darkorange", new Color32(255,140,0,255));
-        cat_color.Add("royalblue", new Color32(0,35,102,255));
-        cat_color.Add("crimsom", new Color32(220,20,60,255));
+        cat_color = new Dictionary<string, Color32>
+        {
+            { "blue", new Color32(0, 0, 255, 255) },
+            { "white", new Color32(255, 255, 255, 255) },
+            { "yellow", new Color32(255, 255, 0, 255) },
+            { "cyan", new Color32(0, 255, 255, 255) },
+            { "lightcyan", new Color32(244, 255, 255, 255) },
+            { "darkgreen", new Color32(0, 128, 0, 255) },
+            { "darkgrey", new Color32(50, 50, 50, 255) },
+            { "darkred", new Color32(128, 0, 0, 255) },
+            { "darkturquoise", new Color32(0, 128, 128, 255) },
+            { "green", new Color32(0, 255, 0, 255) },
+            { "grey60", new Color32(128, 128, 128, 255) },
+            { "magenta", new Color32(255, 0, 255, 255) },
+            { "midnightblue", new Color32(0, 0, 128, 255) },
+            { "lightyellow", new Color32(255, 255, 128, 255) },
+            { "pink", new Color32(255, 128, 255, 255) },
+            { "purple", new Color32(128, 0, 128, 255) },
+            { "violet", new Color32(238, 130, 238, 255) },
+            { "saddlebrown", new Color32(139, 69, 19, 255) },
+            { "brown", new Color32(165, 42, 42, 255) },
+            { "tan", new Color32(210, 180, 140, 255) },
+            { "salmon", new Color32(233, 150, 122, 255) },
+            { "greenyellow", new Color32(173, 255, 47, 255) },
+            { "turquoise", new Color32(64, 224, 208, 255) },
+            { "darkorange", new Color32(255, 140, 0, 255) },
+            { "royalblue", new Color32(0, 35, 102, 255) },
+            { "crimsom", new Color32(220, 20, 60, 255) }
+        };
     }
 
     private void InitializeOncoGroups(){
@@ -241,9 +247,9 @@ public class LoadFile : MonoBehaviour
         // We load the network and categories files and save the information in arrays
         string[] network = Resources.Load<TextAsset>(networkName).text.Split('\n');
         string[] categories = Resources.Load<TextAsset>(networkCategories).text.Split('\n');
-        bool isBiopsy = (networkName == "biopsy-network") ? true : false;
-
+        Dictionary<string, List<string>> particle_relations = new Dictionary<string, List<string>>();
         Dictionary<string, ParticleSystem.Particle> particleDict = new Dictionary<string, ParticleSystem.Particle>();
+        bool isBiopsy = (networkName == "biopsy-network");
 
         for(int cat = 0; cat < categories.Length - 1; cat++) {
             string[] content = categories[cat].Split(',');
@@ -251,12 +257,14 @@ public class LoadFile : MonoBehaviour
             Color32 particle_color = cat_color[content[0]];
             
             for(int gene = 0; gene < genes.Length; gene++) {
-                ParticleSystem.Particle new_particle = new ParticleSystem.Particle();
-                new_particle.remainingLifetime = 100000.0f;
-                new_particle.startLifetime = 100000.0f;
-                new_particle.startSize = 0.1f;
-                new_particle.startColor =  particle_color;
-                new_particle.position = new Vector3(UnityEngine.Random.value * 50, UnityEngine.Random.value * 10, UnityEngine.Random.value * 50);
+                ParticleSystem.Particle new_particle = new ParticleSystem.Particle
+                {
+                    remainingLifetime = 100000.0f,
+                    startLifetime = 100000.0f,
+                    startSize = 0.1f,
+                    startColor = particle_color,
+                    position = new Vector3(UnityEngine.Random.value * 50, UnityEngine.Random.value * 10, UnityEngine.Random.value * 50)
+                };
                 particleDict[genes[gene]] = new_particle;
                 if (isBiopsy)
                 {
@@ -270,7 +278,6 @@ public class LoadFile : MonoBehaviour
         }
         
         List<string> keys = Enumerable.ToList(particleDict.Keys);
-        particle_relations = new Dictionary<string, List<string>>();
         int size = keys.Count;
         for(int it = 0; it < 10; it++) {
             for(int conn = 1; conn < network.Length - 1; conn++) {
@@ -305,6 +312,11 @@ public class LoadFile : MonoBehaviour
                 }
             }
         }
+
+        if (isBiopsy)
+            networkBiopsy = particle_relations;
+        else
+            networkBlood = particle_relations;
 
         Dictionary<string, ParticleSystem.Particle> particlesReal = new Dictionary<string, ParticleSystem.Particle>();
         foreach(var p in particleDict.Keys) {
