@@ -6603,6 +6603,7 @@ MonoBehaviour:
   gene_name: {fileID: 475132339}
   gene_name2: {fileID: 376744956}
   gene_position: {fileID: 376744958}
+  line: {fileID: 5538408296323256936, guid: a2a159a9acdb8c440a236df1248582d5, type: 3}
 --- !u!199 &1026996565
 ParticleSystemRenderer:
   serializedVersion: 6

@@ -11,6 +11,7 @@ public class LoadFile : MonoBehaviour
     public TextMesh gene_name;
     public TextMesh gene_name2;
     public Transform gene_position;
+    public GameObject line;
 
     private ParticleSystem ps;
     private Dictionary<string, ParticleSystem.Particle> particlesBlood;
@@ -19,7 +20,7 @@ public class LoadFile : MonoBehaviour
     private Dictionary<string, List<string>> networkBiopsy;
     private Dictionary<string, Color32> geneColorBlood;
     private Dictionary<string, Color32> geneColorBiopsy;
-    private List<LineRenderer> lines;
+    private List<GameObject> lines;
     private Dictionary<string, string[]> oncoGroups;
     private Dictionary<string, Color32> cat_color;
     private bool isBlood = true;
@@ -30,7 +31,7 @@ public class LoadFile : MonoBehaviour
     void Start()
     {
         // Inizialize lines for the eges of the network
-        lines = new List<LineRenderer>();
+        lines = new List<GameObject>();
         
         // Initialize Dictionary to store information about each gene and its color
         geneColorBlood = new Dictionary<string, Color32>();
@@ -109,7 +110,7 @@ public class LoadFile : MonoBehaviour
             gene_name2.text = gene_string;
             gene_name2.transform.position = gene_position.position;
 
-            Debug.Log($"Drawing lines for gene {gene_string}");
+            //Debug.Log($"Drawing lines for gene {gene_string}");
 
             if (lines.Count < 50)
             {
@@ -117,15 +118,14 @@ public class LoadFile : MonoBehaviour
                 {
                     try
                     {
-                        GameObject obj = new GameObject("line");
-                        LineRenderer lr = obj.AddComponent<LineRenderer>() as LineRenderer;
-                        lr.material = new Material(Shader.Find("Sprites/Default"));
                         Vector3[] vs = new Vector3[2];
                         vs[0] = particles[remote_gene].position;
                         vs[1] = particles[gene_string].position;
-                        lr.positionCount = vs.Length;
-                        lr.SetPositions(vs);
-                        lines.Add(lr);
+                        Instantiate(line, vs[0], Quaternion.identity);
+
+                        //line.positionCount = vs.Length;
+                        //line.SetPositions(vs);
+                        lines.Add(line);
                     }
                     catch (InvalidCastException e)
                     {
@@ -138,7 +138,7 @@ public class LoadFile : MonoBehaviour
         }
         else
         {
-            foreach (LineRenderer line in lines)
+            foreach (GameObject line in lines)
             {
                 Destroy(line);
             }
