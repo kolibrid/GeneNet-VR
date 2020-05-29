@@ -7,7 +7,8 @@ using UnityEngine.UI;
 
 public class LoadFile : MonoBehaviour
 {
-    public Transform body;
+    public Transform headOrientation;
+    public Transform playArea;
     public TextMesh gene_name;
     public TextMesh gene_name2;
     public Transform gene_position;
@@ -62,26 +63,28 @@ public class LoadFile : MonoBehaviour
     }
 
     void Update(){
-        Vector3 controllerPosition = body.position;
-        //Vector3 controllerPosition = rayController.transform.position + body.position;
-        Quaternion controllerRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote) * body.rotation;
-        Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
-        Ray controllerRay = new Ray(controllerPosition, controllerDirection);
         Dictionary<string, ParticleSystem.Particle> particles = new Dictionary<string, ParticleSystem.Particle>();
         Dictionary<string, List<string>> particle_relations;
-        particles = isBlood ? particlesBlood : particlesBiopsy;
-        particle_relations = isBlood ? networkBlood : networkBiopsy;
 
-        Debug.DrawRay(controllerPosition, controllerDirection*10, Color.red);
+        Vector3 controllerPosition = new Vector3(headOrientation.position.x, playArea.position.y, headOrientation.position.z);
+        Vector3 right = Vector3.Cross(playArea.up, headOrientation.forward);
+        Vector3 forward = Vector3.Cross(right, playArea.up);
+        Quaternion controllerRotation = Quaternion.LookRotation(forward, playArea.up);
+        Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
 
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
-        float min_distance = 100.0f;
+        float min_distance = 8.0f;
 
+        Ray controllerRay = new Ray(controllerPosition, controllerDirection);
+        
+        particles = isBlood ? particlesBlood : particlesBiopsy;
+        particle_relations = isBlood ? networkBlood : networkBiopsy;
+        
         foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles)
         {
-            Vector3 pos = transform.InverseTransformPoint(item.Value.position);
-            float size = item.Value.startSize * 200;
+            Vector3 pos = transform.TransformPoint(item.Value.position);
+            float size = item.Value.startSize * 100;
 
             float distance = Vector3.Cross(controllerRay.direction, pos - controllerRay.origin).magnitude;
 
@@ -105,27 +108,33 @@ public class LoadFile : MonoBehaviour
         if (min_distance < 50.0f && gene_string != "" && particle_relations.ContainsKey(gene_string))
         {
             gene_position.position = gene_pos;
-            gene_position.LookAt(2 * gene_position.position - body.position);
+            gene_position.LookAt(2 * gene_position.position - headOrientation.position);
             gene_name.text = gene_string;
             gene_name2.text = gene_string;
-            gene_name2.transform.position = gene_position.position;
+            gene_name2.transform.position = transform.TransformPoint(gene_position.position);
+            gene_name2.transform.LookAt(headOrientation.transform.position);
 
             //Debug.Log($"Drawing lines for gene {gene_string}");
 
-            if (lines.Count < 50)
+            if (lines.Count < 20)
             {
                 foreach (string remote_gene in particle_relations[gene_string])
                 {
                     try
                     {
                         Vector3[] vs = new Vector3[2];
-                        vs[0] = particles[remote_gene].position;
-                        vs[1] = particles[gene_string].position;
-                        Instantiate(line, vs[0], Quaternion.identity);
+                        GameObject clone;
+                        LineRenderer clone_line;
 
-                        //line.positionCount = vs.Length;
-                        //line.SetPositions(vs);
-                        lines.Add(line);
+                        vs[0] = transform.TransformPoint(particles[remote_gene].position);
+                        vs[1] = transform.TransformPoint(particles[gene_string].position);
+
+                        clone = Instantiate(line);
+                        clone_line = clone.GetComponent <LineRenderer>();
+
+                        clone_line.SetPositions(vs);
+
+                        lines.Add(clone);
                     }
                     catch (InvalidCastException e)
                     {
@@ -134,6 +143,14 @@ public class LoadFile : MonoBehaviour
 
                 }
                 //Debug.Log($"Number of lines is {lines.Count}");
+            }
+            else
+            {
+                foreach (GameObject line in lines)
+                {
+                    Destroy(line);
+                }
+                lines.Clear();
             }
         }
         else
