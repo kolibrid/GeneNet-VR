@@ -7,11 +7,11 @@ using UnityEngine.UI;
 
 public class LoadFile : MonoBehaviour
 {
-    public Transform headOrientation;
+    public Transform rightControllerAlias;
+    public Transform headsetAlias;
     public Transform playArea;
-    public TextMesh gene_name;
-    public TextMesh gene_name2;
-    public Transform gene_position;
+    public TextMesh textController;
+    public TextMesh textNetwork;
     public GameObject line;
 
     private ParticleSystem ps;
@@ -66,11 +66,16 @@ public class LoadFile : MonoBehaviour
         Dictionary<string, ParticleSystem.Particle> particles = new Dictionary<string, ParticleSystem.Particle>();
         Dictionary<string, List<string>> particle_relations;
 
-        Vector3 controllerPosition = new Vector3(headOrientation.position.x, playArea.position.y, headOrientation.position.z);
-        Vector3 right = Vector3.Cross(playArea.up, headOrientation.forward);
+        Vector3 controllerPosition = new Vector3(rightControllerAlias.position.x, playArea.position.y, rightControllerAlias.position.z);
+        Vector3 headsetPosition = new Vector3(headsetAlias.position.x, playArea.position.y, headsetAlias.position.z);
+        Vector3 right = Vector3.Cross(playArea.up, rightControllerAlias.forward);
         Vector3 forward = Vector3.Cross(right, playArea.up);
         Quaternion controllerRotation = Quaternion.LookRotation(forward, playArea.up);
         Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
+
+        Vector3 rightHeader = Vector3.Cross(playArea.up, headsetAlias.forward);
+        Vector3 forwardHeader = Vector3.Cross(rightHeader, playArea.up);
+        Quaternion headsetRotation = Quaternion.LookRotation(forwardHeader, playArea.up);
 
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
@@ -107,12 +112,12 @@ public class LoadFile : MonoBehaviour
 
         if (min_distance < 50.0f && gene_string != "" && particle_relations.ContainsKey(gene_string))
         {
-            gene_position.position = gene_pos;
-            gene_position.LookAt(2 * gene_position.position - headOrientation.position);
-            gene_name.text = gene_string;
-            gene_name2.text = gene_string;
-            gene_name2.transform.position = transform.TransformPoint(gene_position.position);
-            gene_name2.transform.LookAt(headOrientation.transform.position);
+            // Controller gene text
+            textController.text = gene_string;
+            
+            textNetwork.text = gene_string;
+            textNetwork.transform.position = gene_pos;
+            textNetwork.transform.rotation = headsetRotation;
 
             //Debug.Log($"Drawing lines for gene {gene_string}");
 
@@ -130,7 +135,7 @@ public class LoadFile : MonoBehaviour
                         vs[1] = transform.TransformPoint(particles[gene_string].position);
 
                         clone = Instantiate(line);
-                        clone_line = clone.GetComponent <LineRenderer>();
+                        clone_line = clone.GetComponent<LineRenderer>();
 
                         clone_line.SetPositions(vs);
 

@@ -988,36 +988,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 169128276}
   m_CullTransparentMesh: 0
---- !u!1 &169428978
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 169428979}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &169428979
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 169428978}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.04, y: -0.38165236, z: -4.82}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 23
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &177082359
 GameObject:
   m_ObjectHideFlags: 0
@@ -2747,7 +2717,7 @@ GameObject:
   - component: {fileID: 376744957}
   - component: {fileID: 376744956}
   m_Layer: 0
-  m_Name: Gene name 2
+  m_Name: TextNetwork
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2763,7 +2733,7 @@ TextMesh:
   m_GameObject: {fileID: 376744955}
   m_Text: Gene
   m_OffsetZ: 0
-  m_CharacterSize: 0.3
+  m_CharacterSize: 0.05
   m_LineSpacing: 1
   m_Anchor: 0
   m_Alignment: 0
@@ -2819,13 +2789,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 376744955}
-  m_LocalRotation: {x: 0.19819506, y: -0, z: -0, w: 0.9801626}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.0407, y: 0.8316386, z: -0.21040492}
   m_LocalScale: {x: 0.090339996, y: 0.090339996, z: 0.090339996}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 22.863, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &387927086
 GameObject:
   m_ObjectHideFlags: 0
@@ -3583,7 +3553,7 @@ GameObject:
   - component: {fileID: 475132340}
   - component: {fileID: 475132339}
   m_Layer: 0
-  m_Name: Gene name
+  m_Name: TextController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6629,11 +6599,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ba91f5065b4641b19549bf2693b5b6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  headOrientation: {fileID: 1057067207}
+  rightControllerAlias: {fileID: 1057067207}
+  headsetAlias: {fileID: 1057067210}
   playArea: {fileID: 1057067212}
-  gene_name: {fileID: 475132339}
-  gene_name2: {fileID: 376744956}
-  gene_position: {fileID: 376744958}
+  textController: {fileID: 475132339}
+  textNetwork: {fileID: 376744956}
   line: {fileID: 5538408296323256936, guid: a2a159a9acdb8c440a236df1248582d5, type: 3}
 --- !u!199 &1026996565
 ParticleSystemRenderer:
