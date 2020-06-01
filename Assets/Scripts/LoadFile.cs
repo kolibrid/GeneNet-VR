@@ -28,7 +28,6 @@ public class LoadFile : MonoBehaviour
     
     UnityEvent m_RelationshipEvent;
 
-
     void Start()
     {
         // Inizialize lines for the eges of the network
@@ -63,108 +62,8 @@ public class LoadFile : MonoBehaviour
     }
 
     void Update(){
-        Dictionary<string, ParticleSystem.Particle> particles = new Dictionary<string, ParticleSystem.Particle>();
-        Dictionary<string, List<string>> particle_relations;
-
-        Vector3 controllerPosition = new Vector3(rightControllerAlias.position.x, playArea.position.y, rightControllerAlias.position.z);
-        Vector3 headsetPosition = new Vector3(headsetAlias.position.x, playArea.position.y, headsetAlias.position.z);
-        Vector3 right = Vector3.Cross(playArea.up, rightControllerAlias.forward);
-        Vector3 forward = Vector3.Cross(right, playArea.up);
-        Quaternion controllerRotation = Quaternion.LookRotation(forward, playArea.up);
-        Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
-
-        Vector3 rightHeader = Vector3.Cross(playArea.up, headsetAlias.forward);
-        Vector3 forwardHeader = Vector3.Cross(rightHeader, playArea.up);
-        Quaternion headsetRotation = Quaternion.LookRotation(forwardHeader, playArea.up);
-
-        string gene_string = "";
-        Vector3 gene_pos = new Vector3();
-        float min_distance = 8.0f;
-
-        Ray controllerRay = new Ray(controllerPosition, controllerDirection);
-        
-        particles = isBlood ? particlesBlood : particlesBiopsy;
-        particle_relations = isBlood ? networkBlood : networkBiopsy;
-        
-        foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles)
-        {
-            Vector3 pos = transform.TransformPoint(item.Value.position);
-            float size = item.Value.startSize * 100;
-
-            float distance = Vector3.Cross(controllerRay.direction, pos - controllerRay.origin).magnitude;
-
-            if (distance < size)
-            {
-                //Debug.Log($"distance is {distance}, size is {size} and min_distance is {min_distance}");
-                float current_distance = (pos - controllerRay.origin).magnitude;
-                if (current_distance < min_distance)
-                {
-                    min_distance = current_distance;
-                    gene_pos = pos;
-                    gene_string = item.Key;
-                    //Debug.Log($"The name of the gene that is closer is {gene_string} and min_distance is {min_distance}");
-                }
-            }
-        }
-
-        //Debug.Log($"The name of the gene that is closer is {gene_string} and min_distance is {min_distance}");
-        //Debug.Log($"It is {(particle_relations.ContainsKey(gene_string))}");
-
-        if (min_distance < 50.0f && gene_string != "" && particle_relations.ContainsKey(gene_string))
-        {
-            // Controller gene text
-            textController.text = gene_string;
-            
-            textNetwork.text = gene_string;
-            textNetwork.transform.position = gene_pos;
-            textNetwork.transform.rotation = headsetRotation;
-
-            //Debug.Log($"Drawing lines for gene {gene_string}");
-
-            if (lines.Count < 20)
-            {
-                foreach (string remote_gene in particle_relations[gene_string])
-                {
-                    try
-                    {
-                        Vector3[] vs = new Vector3[2];
-                        GameObject clone;
-                        LineRenderer clone_line;
-
-                        vs[0] = transform.TransformPoint(particles[remote_gene].position);
-                        vs[1] = transform.TransformPoint(particles[gene_string].position);
-
-                        clone = Instantiate(line);
-                        clone_line = clone.GetComponent<LineRenderer>();
-
-                        clone_line.SetPositions(vs);
-
-                        lines.Add(clone);
-                    }
-                    catch (InvalidCastException e)
-                    {
-                        Debug.Log($"There was an error adding a line: {e}");
-                    }
-
-                }
-                //Debug.Log($"Number of lines is {lines.Count}");
-            }
-            else
-            {
-                foreach (GameObject line in lines)
-                {
-                    Destroy(line);
-                }
-                lines.Clear();
-            }
-        }
-        else
-        {
-            foreach (GameObject line in lines)
-            {
-                Destroy(line);
-            }
-            lines.Clear();
+        if (OVRInput.Get(OVRInput.Axis1D.SecondaryIndexTrigger) > 0.3){
+            SelectNode();
         }
     }
 
@@ -216,6 +115,112 @@ public class LoadFile : MonoBehaviour
         isBlood = !isBlood;
 
         resetToggleMenu();
+    }
+
+    private void SelectNode()
+    {
+        Dictionary<string, ParticleSystem.Particle> particles;
+        Dictionary<string, List<string>> particle_relations;
+
+        Vector3 controllerPosition = new Vector3(rightControllerAlias.position.x, playArea.position.y, rightControllerAlias.position.z);
+        Vector3 right = Vector3.Cross(playArea.up, rightControllerAlias.forward);
+        Vector3 forward = Vector3.Cross(right, playArea.up);
+        Quaternion controllerRotation = Quaternion.LookRotation(forward, playArea.up);
+        Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
+
+        Vector3 rightHeader = Vector3.Cross(playArea.up, headsetAlias.forward);
+        Vector3 forwardHeader = Vector3.Cross(rightHeader, playArea.up);
+        Quaternion headsetRotation = Quaternion.LookRotation(forwardHeader, playArea.up);
+
+        string gene_string = "";
+        Vector3 gene_pos = new Vector3();
+        float min_distance = 8.0f;
+
+        Ray controllerRay = new Ray(controllerPosition, controllerDirection);
+
+        particles = isBlood ? particlesBlood : particlesBiopsy;
+        particle_relations = isBlood ? networkBlood : networkBiopsy;
+
+        foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles)
+        {
+            Vector3 pos = transform.TransformPoint(item.Value.position);
+            float size = item.Value.startSize * 100;
+
+            float distance = Vector3.Cross(controllerRay.direction, pos - controllerRay.origin).magnitude;
+
+            if (distance < size)
+            {
+                //Debug.Log($"distance is {distance}, size is {size} and min_distance is {min_distance}");
+                float current_distance = (pos - controllerRay.origin).magnitude;
+                if (current_distance < min_distance)
+                {
+                    min_distance = current_distance;
+                    gene_pos = pos;
+                    gene_string = item.Key;
+                    //Debug.Log($"The name of the gene that is closer is {gene_string} and min_distance is {min_distance}");
+                }
+            }
+        }
+
+        //Debug.Log($"The name of the gene that is closer is {gene_string} and min_distance is {min_distance}");
+        //Debug.Log($"It is {(particle_relations.ContainsKey(gene_string))}");
+
+        if (min_distance < 50.0f && gene_string != "" && particle_relations.ContainsKey(gene_string))
+        {
+            // Controller gene text
+            textController.text = gene_string;
+
+            textNetwork.text = gene_string;
+            textNetwork.transform.position = gene_pos;
+            textNetwork.transform.rotation = headsetRotation;
+
+            //Debug.Log($"Drawing lines for gene {gene_string}");
+
+            if (lines.Count < 20)
+            {
+                foreach (string remote_gene in particle_relations[gene_string])
+                {
+                    try
+                    {
+                        Vector3[] vs = new Vector3[2];
+                        GameObject clone;
+                        LineRenderer clone_line;
+
+                        vs[0] = transform.TransformPoint(particles[remote_gene].position);
+                        vs[1] = transform.TransformPoint(particles[gene_string].position);
+
+                        clone = Instantiate(line);
+                        clone_line = clone.GetComponent<LineRenderer>();
+
+                        clone_line.SetPositions(vs);
+
+                        lines.Add(clone);
+                    }
+                    catch (InvalidCastException e)
+                    {
+                        Debug.Log($"There was an error adding a line: {e}");
+                    }
+
+                }
+                //Debug.Log($"Number of lines is {lines.Count}");
+            }
+            else
+            {
+                foreach (GameObject line in lines)
+                {
+                    Destroy(line);
+                }
+                lines.Clear();
+            }
+        }
+        else
+        {
+            foreach (GameObject line in lines)
+            {
+                Destroy(line);
+            }
+            lines.Clear();
+        }
     }
 
     private void InitializeColors(){
