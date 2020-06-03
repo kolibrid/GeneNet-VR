@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System;
 using UnityEngine.UI;
+using Zinnia.Cast;
 
 public class LoadFile : MonoBehaviour
 {
@@ -115,6 +116,14 @@ public class LoadFile : MonoBehaviour
         isBlood = !isBlood;
 
         resetToggleMenu();
+    }
+
+    //Similar to HandleData from Zinnia ObjectPointer
+    public void TestPointer(PointsCast.EventData data)
+    {
+        Vector3 rayVector = data.Points[1] - data.Points[0];
+        Vector3 forward = rayVector * 30;
+        Debug.DrawRay(data.Points[0], forward, Color.cyan);
     }
 
     private void SelectNode()
