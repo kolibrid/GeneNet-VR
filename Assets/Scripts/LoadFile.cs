@@ -26,6 +26,7 @@ public class LoadFile : MonoBehaviour
     private Dictionary<string, string[]> oncoGroups;
     private Dictionary<string, Color32> cat_color;
     private bool isBlood = true;
+    private string currentNode;
     
     UnityEvent m_RelationshipEvent;
 
@@ -159,22 +160,17 @@ public class LoadFile : MonoBehaviour
 
             if (distance < size)
             {
-                //Debug.Log($"distance is {distance}, size is {size} and min_distance is {min_distance}");
                 float current_distance = (pos - controllerRay.origin).magnitude;
                 if (current_distance < min_distance)
                 {
                     min_distance = current_distance;
                     gene_pos = pos;
                     gene_string = item.Key;
-                    //Debug.Log($"The name of the gene that is closer is {gene_string} and min_distance is {min_distance}");
                 }
             }
         }
 
-        //Debug.Log($"The name of the gene that is closer is {gene_string} and min_distance is {min_distance}");
-        //Debug.Log($"It is {(particle_relations.ContainsKey(gene_string))}");
-
-        if (min_distance < 50.0f && gene_string != "" && particle_relations.ContainsKey(gene_string))
+        if (min_distance < 50.0f && gene_string != "" && particle_relations.ContainsKey(gene_string) && currentNode != gene_string)
         {
             // Controller gene text
             textController.text = gene_string;
@@ -183,52 +179,38 @@ public class LoadFile : MonoBehaviour
             textNetwork.transform.position = gene_pos;
             textNetwork.transform.rotation = headsetRotation;
 
-            //Debug.Log($"Drawing lines for gene {gene_string}");
+            currentNode = gene_string;
 
-            if (lines.Count < 20)
-            {
-                foreach (string remote_gene in particle_relations[gene_string])
-                {
-                    try
-                    {
-                        Vector3[] vs = new Vector3[2];
-                        GameObject clone;
-                        LineRenderer clone_line;
-
-                        vs[0] = transform.TransformPoint(particles[remote_gene].position);
-                        vs[1] = transform.TransformPoint(particles[gene_string].position);
-
-                        clone = Instantiate(line);
-                        clone_line = clone.GetComponent<LineRenderer>();
-
-                        clone_line.SetPositions(vs);
-
-                        lines.Add(clone);
-                    }
-                    catch (InvalidCastException e)
-                    {
-                        Debug.Log($"There was an error adding a line: {e}");
-                    }
-
-                }
-                //Debug.Log($"Number of lines is {lines.Count}");
-            }
-            else
-            {
-                foreach (GameObject line in lines)
-                {
-                    Destroy(line);
-                }
-                lines.Clear();
-            }
-        }
-        else
-        {
             foreach (GameObject line in lines)
             {
                 Destroy(line);
             }
             lines.Clear();
+
+            foreach (string remote_gene in particle_relations[gene_string])
+            {
+                try
+                {
+                    Vector3[] vs = new Vector3[2];
+                    GameObject clone;
+                    LineRenderer clone_line;
+
+                    vs[0] = transform.TransformPoint(particles[remote_gene].position);
+                    vs[1] = transform.TransformPoint(particles[gene_string].position);
+
+                    clone = Instantiate(line);
+                    clone_line = clone.GetComponent<LineRenderer>();
+
+                    clone_line.SetPositions(vs);
+
+                    lines.Add(clone);
+                }
+                catch (InvalidCastException e)
+                {
+                    Debug.Log($"There was an error adding a line: {e}");
+                }
+
+            }
         }
     }
 
