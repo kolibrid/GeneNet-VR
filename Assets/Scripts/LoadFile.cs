@@ -200,6 +200,7 @@ public class LoadFile : MonoBehaviour
                     vs[1] = transform.TransformPoint(particles[gene_string].position);
 
                     clone = Instantiate(line);
+                    clone.transform.parent = this.transform;
                     clone_line = clone.GetComponent<LineRenderer>();
 
                     clone_line.SetPositions(vs);
