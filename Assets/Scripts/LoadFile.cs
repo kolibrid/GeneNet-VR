@@ -5,6 +5,7 @@ using UnityEngine.Events;
 using System;
 using UnityEngine.UI;
 using Zinnia.Cast;
+using System.Collections;
 
 public class LoadFile : MonoBehaviour
 {
@@ -182,6 +183,9 @@ public class LoadFile : MonoBehaviour
 
             currentNode = gene_string;
 
+            // Haptics right controller vibration
+            StartCoroutine(Haptics(0.5f, 0.5f, 0.2f, true, false));
+
             foreach (GameObject line in lines)
             {
                 Destroy(line);
@@ -213,6 +217,17 @@ public class LoadFile : MonoBehaviour
 
             }
         }
+    }
+
+    private IEnumerator Haptics(float frequency, float amplitude, float duration, bool rightHand, bool leftHand)
+    {
+        if (rightHand) OVRInput.SetControllerVibration(frequency, amplitude, OVRInput.Controller.RTouch);
+        if (leftHand) OVRInput.SetControllerVibration(frequency, amplitude, OVRInput.Controller.LTouch);
+
+        yield return new WaitForSeconds(duration);
+
+        if (rightHand) OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.RTouch);
+        if (leftHand) OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.LTouch);
     }
 
     private void InitializeColors(){
