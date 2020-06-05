@@ -28,8 +28,6 @@ public class LoadFile : MonoBehaviour
     private Dictionary<string, Color32> cat_color;
     private bool isBlood = true;
     private string currentNode;
-    
-    UnityEvent m_RelationshipEvent;
 
     void Start()
     {
@@ -124,6 +122,17 @@ public class LoadFile : MonoBehaviour
         isBlood = !isBlood;
 
         resetToggleMenu();
+    }
+
+    // Reset checkboxes in 2D Menu
+    private void resetToggleMenu()
+    {
+        GameObject toggleMenu = GameObject.Find("CanvasMenu/Panel/Toggles");
+        foreach (Transform toggle in toggleMenu.transform)
+        {
+            Toggle t = toggle.GetComponent<Toggle>();
+            t.isOn = true;
+        }
     }
 
     //Similar to HandleData from Zinnia ObjectPointer
@@ -361,16 +370,6 @@ public class LoadFile : MonoBehaviour
         }
 
         return particlesReal;
-    }
-
-    private void resetToggleMenu()
-    {
-        GameObject toggleMenu = GameObject.Find("CanvasMenu/Panel/Toggles");
-        foreach (Transform toggle in toggleMenu.transform)
-        {
-            Toggle t = toggle.GetComponent<Toggle>();
-            t.isOn = true;
-        }
     }
         
 }
