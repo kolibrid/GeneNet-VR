@@ -64,6 +64,12 @@ public class LoadFile : MonoBehaviour
     }
 
     void Update(){
+        Vector3 rightHeader = Vector3.Cross(playArea.up, headsetAlias.forward);
+        Vector3 forwardHeader = Vector3.Cross(rightHeader, playArea.up);
+        Quaternion headsetRotation = Quaternion.LookRotation(forwardHeader, playArea.up);
+
+        textNetwork.transform.rotation = headsetRotation;
+
         if (OVRInput.Get(OVRInput.Axis1D.SecondaryIndexTrigger) > 0.3){
             SelectNode();
         }
@@ -138,10 +144,6 @@ public class LoadFile : MonoBehaviour
         Quaternion controllerRotation = Quaternion.LookRotation(forward, playArea.up);
         Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
 
-        Vector3 rightHeader = Vector3.Cross(playArea.up, headsetAlias.forward);
-        Vector3 forwardHeader = Vector3.Cross(rightHeader, playArea.up);
-        Quaternion headsetRotation = Quaternion.LookRotation(forwardHeader, playArea.up);
-
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
         float min_distance = 8.0f;
@@ -177,7 +179,6 @@ public class LoadFile : MonoBehaviour
 
             textNetwork.text = gene_string;
             textNetwork.transform.position = gene_pos;
-            textNetwork.transform.rotation = headsetRotation;
 
             currentNode = gene_string;
 
