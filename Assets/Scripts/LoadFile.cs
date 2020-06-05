@@ -139,7 +139,7 @@ public class LoadFile : MonoBehaviour
         Dictionary<string, ParticleSystem.Particle> particles;
         Dictionary<string, List<string>> particle_relations;
 
-        Vector3 controllerPosition = new Vector3(rightControllerAlias.position.x, playArea.position.y, rightControllerAlias.position.z);
+        Vector3 controllerPosition = rightControllerAlias.transform.position;
         Vector3 right = Vector3.Cross(playArea.up, rightControllerAlias.forward);
         Vector3 forward = Vector3.Cross(right, playArea.up);
         Quaternion controllerRotation = Quaternion.LookRotation(forward, playArea.up);
