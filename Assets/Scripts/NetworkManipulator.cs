@@ -1,28 +1,22 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
 
 public class NetworkManipulator : MonoBehaviour
 {
     public Transform network;
-    public float scaleRate = 30;
+    public Transform rightControllerAlias;
+    public Transform leftControllerAlias;
 
     private float currentDistance = 0;
     private float newDistance = 0;
-    private Vector3 scaleChange;
-    private Vector3 lControllerPosition;
-    private Vector3 rControllerPosition;
-    private Vector3 initialNetworkPosition;
     private Vector3 rControllerInitialPosition;
-    private float dist;
     UnityEvent m_ScaleEvent;
     UnityEvent m_MoveEvent;
 
     // Start is called before the first frame update
     void Start()
     {
-        initialNetworkPosition = network.transform.position;
+        rControllerInitialPosition = rightControllerAlias.transform.position;
 
         if (m_ScaleEvent == null)
             m_ScaleEvent = new UnityEvent();
@@ -45,17 +39,16 @@ public class NetworkManipulator : MonoBehaviour
         }
         else{
             currentDistance = 0;
-            initialNetworkPosition = network.transform.position;
-            rControllerInitialPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote);
+            rControllerInitialPosition = rightControllerAlias.transform.position;
         }
     }
 
     void Scale(){
-        lControllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTrackedRemote);
-        rControllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote);
+        Vector3 lControllerPosition = transform.TransformDirection(leftControllerAlias.transform.position);
+        Vector3 rControllerPosition = transform.TransformDirection(rightControllerAlias.transform.position);
 
         // Scale
-        dist = Vector3.Distance(lControllerPosition, rControllerPosition);
+        float dist = Vector3.Distance(lControllerPosition, rControllerPosition);
 
         if(currentDistance == 0){
             currentDistance = dist;
@@ -72,8 +65,8 @@ public class NetworkManipulator : MonoBehaviour
 
     // Change position of the network
     void Move(){
-        rControllerPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTrackedRemote);
-        var vectorPosition = (transform.TransformDirection(rControllerPosition) - transform.TransformDirection(rControllerInitialPosition)).normalized;
+        Vector3 rControllerPosition = rightControllerAlias.transform.position;
+        Vector3 vectorPosition = (rControllerPosition - rControllerInitialPosition).normalized;
         network.transform.position += vectorPosition * Time.deltaTime;
     }
 }
