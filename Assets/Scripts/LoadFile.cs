@@ -68,10 +68,6 @@ public class LoadFile : MonoBehaviour
         Quaternion headsetRotation = Quaternion.LookRotation(forwardHeader, playArea.up);
 
         textNetwork.transform.rotation = headsetRotation;
-
-        if (OVRInput.Get(OVRInput.Axis1D.SecondaryIndexTrigger) > 0.3){
-            SelectNode();
-        }
     }
 
     // Filter genes method for the toggle menu
@@ -136,14 +132,7 @@ public class LoadFile : MonoBehaviour
     }
 
     //Similar to HandleData from Zinnia ObjectPointer
-    public void TestPointer(PointsCast.EventData data)
-    {
-        Vector3 rayVector = data.Points[1] - data.Points[0];
-        Vector3 forward = rayVector * 30;
-        Debug.DrawRay(data.Points[0], forward, Color.cyan);
-    }
-
-    private void SelectNode()
+    public void SelectNode(PointsCast.EventData data)
     {
         Dictionary<string, ParticleSystem.Particle> particles;
         Dictionary<string, List<string>> particle_relations;
@@ -158,7 +147,11 @@ public class LoadFile : MonoBehaviour
         Vector3 gene_pos = new Vector3();
         float min_distance = 8.0f;
 
-        Ray controllerRay = new Ray(controllerPosition, controllerDirection);
+        Vector3 rayVector = data.Points[1] - data.Points[0];
+        Vector3 forwardRay = rayVector;
+        //Debug.DrawRay(data.Points[0], forwardRay, Color.cyan);
+
+        Ray controllerRay = new Ray(data.Points[0], forwardRay);
 
         particles = isBlood ? particlesBlood : particlesBiopsy;
         particle_relations = isBlood ? networkBlood : networkBiopsy;
@@ -166,7 +159,7 @@ public class LoadFile : MonoBehaviour
         foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles)
         {
             Vector3 pos = transform.TransformPoint(item.Value.position);
-            float size = item.Value.startSize * 100;
+            float size = item.Value.startSize * 50;
 
             float distance = Vector3.Cross(controllerRay.direction, pos - controllerRay.origin).magnitude;
 
