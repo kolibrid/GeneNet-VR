@@ -118,6 +118,13 @@ public class LoadFile : MonoBehaviour
         isBlood = !isBlood;
 
         resetToggleMenu();
+
+        // Remove lines
+        foreach (GameObject line in lines)
+        {
+            Destroy(line);
+        }
+        lines.Clear();
     }
 
     // Reset checkboxes in 2D Menu
@@ -141,7 +148,7 @@ public class LoadFile : MonoBehaviour
         Vector3 right = Vector3.Cross(playArea.up, rightControllerAlias.forward);
         Vector3 forward = Vector3.Cross(right, playArea.up);
         Quaternion controllerRotation = Quaternion.LookRotation(forward, playArea.up);
-        Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
+        //Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
 
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
@@ -222,18 +229,9 @@ public class LoadFile : MonoBehaviour
         }
     }
 
-    private IEnumerator Haptics(float frequency, float amplitude, float duration, bool rightHand, bool leftHand)
+    // Initialize array with color names and RGBA code
+    private void InitializeColors()
     {
-        if (rightHand) OVRInput.SetControllerVibration(frequency, amplitude, OVRInput.Controller.RTouch);
-        if (leftHand) OVRInput.SetControllerVibration(frequency, amplitude, OVRInput.Controller.LTouch);
-
-        yield return new WaitForSeconds(duration);
-
-        if (rightHand) OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.RTouch);
-        if (leftHand) OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.LTouch);
-    }
-
-    private void InitializeColors(){
         // Cluster colours
         cat_color = new Dictionary<string, Color32>
         {
@@ -266,7 +264,9 @@ public class LoadFile : MonoBehaviour
         };
     }
 
-    private void InitializeOncoGroups(){
+    // Initialize oncoligc groups for the filtering
+    private void InitializeOncoGroups()
+    {
         TextAsset oncoGroups_text = Resources.Load<TextAsset>("oncoGroups");
         string[] oncoGroups_array = oncoGroups_text.text.Split('\n');
 
@@ -280,6 +280,17 @@ public class LoadFile : MonoBehaviour
         }
     }
 
+    private IEnumerator Haptics(float frequency, float amplitude, float duration, bool rightHand, bool leftHand)
+    {
+        if (rightHand) OVRInput.SetControllerVibration(frequency, amplitude, OVRInput.Controller.RTouch);
+        if (leftHand) OVRInput.SetControllerVibration(frequency, amplitude, OVRInput.Controller.LTouch);
+
+        yield return new WaitForSeconds(duration);
+
+        if (rightHand) OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.RTouch);
+        if (leftHand) OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.LTouch);
+    }
+
     private Dictionary<string, ParticleSystem.Particle> InitializeNetwork(string networkName, string networkCategories){
         // We load the network and categories files and save the information in arrays
         string[] network = Resources.Load<TextAsset>(networkName).text.Split('\n');
@@ -287,6 +298,10 @@ public class LoadFile : MonoBehaviour
         Dictionary<string, List<string>> particle_relations = new Dictionary<string, List<string>>();
         Dictionary<string, ParticleSystem.Particle> particleDict = new Dictionary<string, ParticleSystem.Particle>();
         bool isBiopsy = (networkName == "biopsy-network");
+        int maxIt = isBiopsy ? 100 : 10;
+        int ranPos = 50;
+        int norm = isBiopsy ? 1 : 10;
+        Debug.Log(maxIt);
 
         for(int cat = 0; cat < categories.Length - 1; cat++) {
             string[] content = categories[cat].Split(',');
@@ -300,7 +315,7 @@ public class LoadFile : MonoBehaviour
                     startLifetime = 100000.0f,
                     startSize = 0.1f,
                     startColor = particle_color,
-                    position = new Vector3(UnityEngine.Random.value * 50, UnityEngine.Random.value * 10, UnityEngine.Random.value * 50)
+                    position = new Vector3(UnityEngine.Random.value * ranPos, UnityEngine.Random.value * 10, UnityEngine.Random.value * ranPos)
                 };
                 particleDict[genes[gene]] = new_particle;
                 if (isBiopsy)
@@ -316,7 +331,7 @@ public class LoadFile : MonoBehaviour
         
         List<string> keys = Enumerable.ToList(particleDict.Keys);
         int size = keys.Count;
-        for(int it = 0; it < 10; it++) {
+        for(int it = 0; it < maxIt; it++) {
             for(int conn = 1; conn < network.Length - 1; conn++) {
                 string[] elems = network[conn].Split(',');
                 string gene1 = elems[0].Replace("\"", string.Empty);
@@ -326,7 +341,7 @@ public class LoadFile : MonoBehaviour
                 gene2 = gene2.Replace(",", string.Empty);
 
                 if(!particle_relations.ContainsKey(gene1)) {
-                    particle_relations[gene1] = new List<string>();                    
+                    particle_relations[gene1] = new List<string>();
                 }
                 particle_relations[gene1].Add(gene2);
 
@@ -340,7 +355,7 @@ public class LoadFile : MonoBehaviour
                     int randint = (int)(UnityEngine.Random.value * size);
                     ParticleSystem.Particle particle = particleDict[gene1];
                     Vector3 avoid_direction = particle.position - particleDict[keys[randint]].position;
-                    particle.position += avoid_direction.normalized / 10;
+                    particle.position += avoid_direction.normalized / norm;
                     Vector3 direction = particleDict[gene2].position - particle.position;                    
                     particle.position += direction.normalized/5;
                     particleDict[gene1] = particle;
