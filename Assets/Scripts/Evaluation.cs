@@ -3,23 +3,28 @@ using System.Linq;
 using UnityEngine;
 using System.Collections;
 using Zinnia.Cast;
+using UnityEngine.UI;
+using TMPro;
 
 public class Evaluation : MonoBehaviour
 {
     public Transform rightControllerAlias;
     public Transform headsetAlias;
     public Transform playArea;
+    public Transform canvas;
     public TextMesh textController;
     public TextMesh textNetwork;
+    public TextMeshProUGUI textFPS;
+    public TextMeshProUGUI textNumParticles;
     public GameObject line;
 
     private ParticleSystem ps;
     private Dictionary<string, ParticleSystem.Particle> particles;
     private Dictionary<string, Color32> particleColor;
     private Dictionary<string, Color32> cat_color;
-    private Dictionary<string, List<string>> network;
     private List<GameObject> lines;
     private string currentNode;
+    private int numColors = 5;
     // Start is called before the first frame update
     void Start()
     {
@@ -40,6 +45,8 @@ public class Evaluation : MonoBehaviour
         var main = ps.main;
         main.maxParticles = particles.Values.Count();
         ps.SetParticles(particles.Values.ToArray());
+
+        textNumParticles.text = "Particles: " + particles.Values.Count().ToString();
     }
 
     // Update is called once per frame
@@ -50,6 +57,8 @@ public class Evaluation : MonoBehaviour
         Quaternion headsetRotation = Quaternion.LookRotation(forwardHeader, playArea.up);
 
         textNetwork.transform.rotation = headsetRotation;
+
+        textFPS.text = "FPS: " + (1.0f / Time.smoothDeltaTime).ToString();
     }
 
     private void InitializeColors()
@@ -71,18 +80,7 @@ public class Evaluation : MonoBehaviour
             { "magenta", new Color32(255, 0, 255, 255) },
             { "midnightblue", new Color32(0, 0, 128, 255) },
             { "lightyellow", new Color32(255, 255, 128, 255) },
-            { "pink", new Color32(255, 128, 255, 255) },
-            { "purple", new Color32(128, 0, 128, 255) },
-            { "violet", new Color32(238, 130, 238, 255) },
-            { "saddlebrown", new Color32(139, 69, 19, 255) },
-            { "brown", new Color32(165, 42, 42, 255) },
-            { "tan", new Color32(210, 180, 140, 255) },
-            { "salmon", new Color32(233, 150, 122, 255) },
-            { "greenyellow", new Color32(173, 255, 47, 255) },
-            { "turquoise", new Color32(64, 224, 208, 255) },
-            { "darkorange", new Color32(255, 140, 0, 255) },
-            { "royalblue", new Color32(0, 35, 102, 255) },
-            { "crimsom", new Color32(220, 20, 60, 255) }
+            { "pink", new Color32(255, 128, 255, 255) }
         };
     }
 
@@ -102,11 +100,6 @@ public class Evaluation : MonoBehaviour
     {
         Dictionary<string, List<string>> particle_relations;
         int max_particles = particles.Values.Count();
-        Vector3 controllerPosition = rightControllerAlias.transform.position;
-        Vector3 right = Vector3.Cross(playArea.up, rightControllerAlias.forward);
-        Vector3 forward = Vector3.Cross(right, playArea.up);
-        Quaternion controllerRotation = Quaternion.LookRotation(forward, playArea.up);
-        //Vector3 controllerDirection = controllerRotation * Vector3.forward * 20;
 
         string gene_string = "";
         Vector3 gene_pos = new Vector3();
@@ -178,42 +171,13 @@ public class Evaluation : MonoBehaviour
 
                 lines.Add(clone);
             }
-
-            //foreach (string remote_gene in particle_relations[gene_string])
-            //{
-            //    try
-            //    {
-            //        Vector3[] vs = new Vector3[2];
-            //        GameObject clone;
-            //        LineRenderer clone_line;
-
-            //        vs[0] = transform.TransformPoint(particles[remote_gene].position);
-            //        vs[1] = transform.TransformPoint(particles[gene_string].position);
-
-            //        clone = Instantiate(line);
-            //        clone.transform.parent = this.transform;
-            //        clone_line = clone.GetComponent<LineRenderer>();
-
-            //        clone_line.SetPositions(vs);
-
-            //        lines.Add(clone);
-            //    }
-            //    catch (InvalidCastException e)
-            //    {
-            //        Debug.Log($"There was an error adding a line: {e}");
-            //    }
-
-            //}
         }
     }
 
     private Dictionary<string, ParticleSystem.Particle> InitializeNetwork(int numParticles)
     {
         // We load the network and categories files and save the information in arrays
-        Dictionary<string, List<string>> particle_relations = new Dictionary<string, List<string>>();
         Dictionary<string, ParticleSystem.Particle> particleDict = new Dictionary<string, ParticleSystem.Particle>();
-
-        int numColors = 5;
 
         for (int cat = 0; cat < numColors; cat++)
         {
@@ -263,5 +227,33 @@ public class Evaluation : MonoBehaviour
 
         //return particlesReal;
         return particleDict;
+    }
+
+    public void AddParticles()
+    {
+        int num_particles = particles.Values.Count();
+
+        for (int particle = num_particles - 1; particle < num_particles + 199; particle++)
+        {
+            int numColor = UnityEngine.Random.Range(0, 14);
+            Color32 color = cat_color.ElementAt(numColor).Value;
+            string colorName = cat_color.ElementAt(numColor).Key;
+            ParticleSystem.Particle new_particle = new ParticleSystem.Particle
+            {
+                remainingLifetime = 100000.0f,
+                startLifetime = 100000.0f,
+                startSize = 0.1f,
+                startColor = color,
+                position = new Vector3((UnityEngine.Random.value * 50) - 25, (UnityEngine.Random.value * 10) - 5, (UnityEngine.Random.value * 50) - 25 )
+            };
+            particles[particle.ToString() + '-' + colorName] = new_particle;
+            particleColor[particle.ToString() + '-' + colorName] = color;
+        }
+
+        var main = ps.main;
+        main.maxParticles = particles.Values.Count();
+        ps.SetParticles(particles.Values.ToArray());
+
+        textNumParticles.text = "Particles: " + particles.Values.Count().ToString();
     }
 }
