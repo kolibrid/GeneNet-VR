@@ -315,7 +315,7 @@ public class LoadFile : MonoBehaviour
                     startLifetime = 100000.0f,
                     startSize = 0.1f,
                     startColor = particle_color,
-                    position = new Vector3(UnityEngine.Random.value * ranPos, UnityEngine.Random.value * 10, UnityEngine.Random.value * ranPos)
+                    position = new Vector3((UnityEngine.Random.value * ranPos) - 25, (UnityEngine.Random.value * 10) - 5, (UnityEngine.Random.value * ranPos) - 25)
                 };
                 particleDict[genes[gene]] = new_particle;
                 if (isBiopsy)
