@@ -16,6 +16,7 @@ public class Evaluation : MonoBehaviour
     public TextMesh textNetwork;
     public TextMeshProUGUI textFPS;
     public TextMeshProUGUI textNumParticles;
+    public TextMeshProUGUI textNumLines;
     public GameObject line;
 
     private ParticleSystem ps;
@@ -25,6 +26,7 @@ public class Evaluation : MonoBehaviour
     private List<GameObject> lines;
     private string currentNode;
     private int numColors = 5;
+    private int numLines = 30;
     // Start is called before the first frame update
     void Start()
     {
@@ -47,6 +49,7 @@ public class Evaluation : MonoBehaviour
         ps.SetParticles(particles.Values.ToArray());
 
         textNumParticles.text = "Particles: " + particles.Values.Count().ToString();
+        textNumLines.text = "Num lines: " + numLines.ToString();
     }
 
     // Update is called once per frame
@@ -98,6 +101,8 @@ public class Evaluation : MonoBehaviour
     //Similar to HandleData from Zinnia ObjectPointer
     public void SelectNode(PointsCast.EventData data)
     {
+        StartCoroutine(WaitCoroutine());
+
         Dictionary<string, List<string>> particle_relations;
         int max_particles = particles.Values.Count();
 
@@ -148,10 +153,8 @@ public class Evaluation : MonoBehaviour
                 Destroy(line);
             }
             lines.Clear();
-
-            // Create random lines for a particular node
-            int num_lines = UnityEngine.Random.Range(10, 50);
-            for (int i = 0; i < num_lines; i++)
+;
+            for (int i = 0; i < numLines; i++)
             {
                 Vector3[] vs = new Vector3[2];
                 GameObject clone;
@@ -172,6 +175,12 @@ public class Evaluation : MonoBehaviour
                 lines.Add(clone);
             }
         }
+    }
+
+    IEnumerator WaitCoroutine()
+    {
+        //yield on a new YieldInstruction that waits for 5 seconds.
+        yield return new WaitForSeconds(0.5f);
     }
 
     private Dictionary<string, ParticleSystem.Particle> InitializeNetwork(int numParticles)
@@ -233,7 +242,7 @@ public class Evaluation : MonoBehaviour
     {
         int num_particles = particles.Values.Count();
 
-        for (int particle = num_particles - 1; particle < num_particles + 199; particle++)
+        for (int particle = num_particles - 1; particle < num_particles + 499; particle++)
         {
             int numColor = UnityEngine.Random.Range(0, 14);
             Color32 color = cat_color.ElementAt(numColor).Value;
@@ -255,5 +264,20 @@ public class Evaluation : MonoBehaviour
         ps.SetParticles(particles.Values.ToArray());
 
         textNumParticles.text = "Particles: " + particles.Values.Count().ToString();
+    }
+
+    public void AddLines()
+    {
+        numLines += 10;
+        textNumLines.text = "Num lines: " + numLines.ToString();
+    }
+
+    public void RemoveLines()
+    {
+        foreach (GameObject line in lines)
+        {
+            Destroy(line);
+        }
+        lines.Clear();
     }
 }
