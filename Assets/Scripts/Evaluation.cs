@@ -208,31 +208,31 @@ public class Evaluation : MonoBehaviour
             }
         }
 
-        List<string> keys = Enumerable.ToList(particleDict.Keys);
-        int size = keys.Count;
-        for (int it = 0; it < 50; it++)
-        {
-            for (int conn = 1; conn < numParticles; conn++)
-            {
-                string gene1 = particleDict.ElementAt(UnityEngine.Random.Range(0, size)).Key;
-                string gene2 = particleDict.ElementAt(UnityEngine.Random.Range(0, size)).Key;
+        //List<string> keys = Enumerable.ToList(particleDict.Keys);
+        //int size = keys.Count;
+        //for (int it = 0; it < 50; it++)
+        //{
+        //    for (int conn = 1; conn < numParticles; conn++)
+        //    {
+        //        string gene1 = particleDict.ElementAt(UnityEngine.Random.Range(0, size)).Key;
+        //        string gene2 = particleDict.ElementAt(UnityEngine.Random.Range(0, size)).Key;
 
-                try
-                {
-                    int randint = (int)(UnityEngine.Random.value * size);
-                    ParticleSystem.Particle particle = particleDict[gene1];
-                    Vector3 avoid_direction = particle.position - particleDict[keys[randint]].position;
-                    particle.position += avoid_direction.normalized / 10;
-                    Vector3 direction = particleDict[gene2].position - particle.position;
-                    particle.position += direction.normalized / 5;
-                    particleDict[gene1] = particle;
-                }
-                catch
-                {
-                    continue;
-                }
-            }
-        }
+        //        try
+        //        {
+        //            int randint = (int)(UnityEngine.Random.value * size);
+        //            ParticleSystem.Particle particle = particleDict[gene1];
+        //            Vector3 avoid_direction = particle.position - particleDict[keys[randint]].position;
+        //            particle.position += avoid_direction.normalized / 10;
+        //            Vector3 direction = particleDict[gene2].position - particle.position;
+        //            particle.position += direction.normalized / 5;
+        //            particleDict[gene1] = particle;
+        //        }
+        //        catch
+        //        {
+        //            continue;
+        //        }
+        //    }
+        //}
 
         //return particlesReal;
         return particleDict;
