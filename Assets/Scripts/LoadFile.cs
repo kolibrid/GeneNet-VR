@@ -201,6 +201,7 @@ public class LoadFile : MonoBehaviour
             }
             lines.Clear();
 
+            // CPU usage - Evaluation
             foreach (string remote_gene in particle_relations[gene_string])
             {
                 try
