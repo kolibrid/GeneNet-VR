@@ -17,13 +17,13 @@ public class LoadFile : MonoBehaviour
     public GameObject line;
 
     private ParticleSystem ps;
-    private Dictionary<string, ParticleSystem.Particle> particlesBlood;
+    public static Dictionary<string, ParticleSystem.Particle> particlesBlood;
     private Dictionary<string, ParticleSystem.Particle> particlesBiopsy;
-    private Dictionary<string, List<string>> networkBlood;
+    public static Dictionary<string, List<string>> networkBlood;
     private Dictionary<string, List<string>> networkBiopsy;
     private Dictionary<string, Color32> geneColorBlood;
     private Dictionary<string, Color32> geneColorBiopsy;
-    private List<GameObject> lines;
+    public List<GameObject> lines;
     private Dictionary<string, string[]> oncoGroups;
     private Dictionary<string, Color32> cat_color;
     private bool isBlood = true;
