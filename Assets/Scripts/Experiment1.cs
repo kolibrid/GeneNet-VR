@@ -19,6 +19,7 @@ public class Experiment1 : MonoBehaviour
     string[] keys;
     private int numKeys;
     private int num;
+    private bool execution;
 
     // Start is called before the first frame update
     void Start()
@@ -31,26 +32,32 @@ public class Experiment1 : MonoBehaviour
         numKeys = keys.Length;
 
         num = 0;
+
+        execution = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        network.transform.Translate(Vector3.back * -0.35f * Time.deltaTime);
+        //network.transform.Translate(Vector3.back * -0.35f * Time.deltaTime);
 
-        selectNodeCoroutine = selectNode(keys[num], 1.0f);
-        StartCoroutine(selectNodeCoroutine);
+        if (execution == false){
+            selectNodeCoroutine = selectNode(keys[num], 0.5f);
+            StartCoroutine(selectNodeCoroutine);
+        }
     }
 
     private IEnumerator selectNode(string gene_string, float waitTime)
     {
         Dictionary<string, List<string>> particle_relations = LoadFile.networkBlood;
 
+        execution = true; // set the flag
+
         yield return new WaitForSeconds(waitTime);
 
         currentNode = gene_string;
 
-        num += 10;
+        num += 1;
 
         // Haptics right controller vibration
         StartCoroutine(Haptics(0.5f, 0.5f, 0.2f, true, false));
@@ -87,6 +94,8 @@ public class Experiment1 : MonoBehaviour
             }
 
         }
+
+        execution = false; // clear the flag before returning
     }
 
     private IEnumerator Haptics(float frequency, float amplitude, float duration, bool rightHand, bool leftHand)
