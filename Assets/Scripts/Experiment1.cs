@@ -14,12 +14,9 @@ public class Experiment1 : MonoBehaviour
     string[] keys;
     private int num;
     private bool execution;
-    private int numKeys;
-
-    private int qty = 0;
     private float currentAvgFPS = 0;
-
     private float[] fpsDict;
+    private int[] qty;
 
     // Start is called before the first frame update
     void Start()
@@ -28,12 +25,13 @@ public class Experiment1 : MonoBehaviour
         lines = new List<GameObject>();
 
         keys = LoadFile.particlesBlood.Keys.ToArray();
-        numKeys = keys.Length;
+
         num = 0;
 
         execution = false;
 
         fpsDict = new float[20];
+        qty = new int[20];
     }
 
     // Update is called once per frame
@@ -41,14 +39,12 @@ public class Experiment1 : MonoBehaviour
     {
         //network.transform.Translate(Vector3.back * -0.25f * Time.deltaTime);
 
-        if (execution == false && num < 19){
+        if (execution == false && num < 20){
             selectNodeCoroutine = selectNode(keys[num], 0.5f);
             StartCoroutine(selectNodeCoroutine);
 
             Debug.Log(num);
-
-            qty = 0;
-        }else if( num == 18)
+        }else if( num == 20)
         {
             string results = "";
             int j = 1;
@@ -77,13 +73,27 @@ public class Experiment1 : MonoBehaviour
         }
         lines.Clear();
 
-        int maxLines = LoadFile.networkBlood[gene_string].Count/2;
-        int currentNumLines = 0;
+        int maxLines = LoadFile.networkBlood[gene_string].Count;
+        Debug.Log("Maxlines for " + num + " is " + maxLines);
 
-        // CPU usage - Evaluation
-        foreach (string remote_gene in LoadFile.networkBlood[gene_string])
+        List<string> DoubleGenes = LoadFile.networkBlood[gene_string];
+        int maxParticle = LoadFile.particlesBlood.Count;
+        List<string> geneNames = new List<string>(LoadFile.particlesBlood.Keys);
+        List<string> newNetwork = new List<string>(geneNames.GetRange(maxParticle - 30, maxParticle - 1));
+
+        foreach(string name in newNetwork)
         {
-            if (++currentNumLines == maxLines) break;
+            if (!newNetwork.Contains(name))
+            {
+                DoubleGenes.Add(name);
+            }
+        }
+
+        //foreach (string remote_gene in LoadFile.networkBlood[gene_string])
+        foreach (string remote_gene in DoubleGenes)
+        {
+            fpsDict[num] = UpdateCumulativeMovingAverageFPS(1 / Time.deltaTime, num);
+            //if (++currentNumLines == maxLines) break;
             try
             {
                 Vector3[] vs = new Vector3[2];
@@ -100,8 +110,6 @@ public class Experiment1 : MonoBehaviour
                 clone_line.SetPositions(vs);
 
                 lines.Add(clone);
-
-                fpsDict[num] = UpdateCumulativeMovingAverageFPS(1 / Time.deltaTime);
             }
             catch (InvalidCastException e)
             {
@@ -112,6 +120,7 @@ public class Experiment1 : MonoBehaviour
 
         execution = false; // clear the flag before returning
 
+        // Update node id
         num += 1;
     }
 
@@ -126,10 +135,10 @@ public class Experiment1 : MonoBehaviour
         if (leftHand) OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.LTouch);
     }
 
-    private float UpdateCumulativeMovingAverageFPS(float newFPS)
+    private float UpdateCumulativeMovingAverageFPS(float newFPS, int nodeID)
     {
-        ++qty;
-        currentAvgFPS += (newFPS - currentAvgFPS) / qty;
+        ++qty[nodeID];
+        currentAvgFPS += (newFPS - currentAvgFPS) / qty[nodeID];
 
         return currentAvgFPS;
     }
