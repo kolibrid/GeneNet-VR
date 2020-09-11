@@ -166,9 +166,9 @@ public class LoadFile : MonoBehaviour
         foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles)
         {
             Vector3 pos = transform.TransformPoint(item.Value.position);
-            float size = item.Value.startSize * 50;
+            float size = item.Value.startSize * 3;
 
-            float distance = Vector3.Cross(controllerRay.direction, pos - controllerRay.origin).magnitude;
+            float distance = Vector3.Cross(rayVector, pos - controllerRay.origin).magnitude;
 
             if (distance < size)
             {
