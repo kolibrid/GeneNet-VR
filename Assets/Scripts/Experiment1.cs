@@ -17,6 +17,7 @@ public class Experiment1 : MonoBehaviour
     private float currentAvgFPS = 0;
     private float[] fpsDict;
     private int[] qty;
+    private int maxEdges = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -37,25 +38,38 @@ public class Experiment1 : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //network.transform.Translate(Vector3.back * -0.25f * Time.deltaTime);
+        // 1. Translate network
+        // Vector3 translate = new Vector3(0.0f, Mathf.Sin(Time.time*3) * Time.deltaTime, 0.3f * Time.deltaTime);
+        // network.transform.Translate(translate);
 
-        if (execution == false && num < 20){
-            selectNodeCoroutine = selectNode(keys[num], 0.5f);
-            StartCoroutine(selectNodeCoroutine);
+        // 2. Scale network
+        // if((int)Math.Round(Mathf.Sin(Time.time*3f)) < 0){
+        //     network.transform.localScale *= 0.99f;
+        // }else{
+        //     network.transform.localScale *= 1.01f;
+        // }
 
-            Debug.Log(num);
-        }else if( num == 20)
-        {
-            string results = "";
-            int j = 1;
-            foreach(float i in fpsDict)
-            {
-                results = results + " (" + j + ", " + i + ")";
-                j++;
-            }
-            Debug.Log(results);
-            num += 1;
-        }
+        // 3. Node selection and line rendering
+        // if (execution == false && num < 20){
+        //     selectNodeCoroutine = selectNode(keys[num], 0.5f);
+        //     StartCoroutine(selectNodeCoroutine);
+
+        //     Debug.Log(num);
+        // }else if( num == 20)
+        // {
+        //     string results = "";
+        //     int j = 1;
+        //     foreach(float i in fpsDict)
+        //     {
+        //         results = results + " (" + j + ", " + i + ")";
+        //         j++;
+        //     }
+        //     Debug.Log(results);
+        //     num += 1;
+        // }
+
+        // Calculate distribution for number of edges
+
     }
 
     private IEnumerator selectNode(string gene_string, float waitTime)

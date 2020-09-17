@@ -409,9 +409,6 @@ public class LoadFile : MonoBehaviour
             string[] content = categories[cat].Split(',');
             string[] genes = content[1].Split(' ');
             Color32 particle_color = cat_color[content[0]];
-
-            if (isBiopsy)
-                Debug.Log("colour is " + content[0]);
             
             for(int gene = 0; gene < genes.Length; gene++) {
                 ParticleSystem.Particle new_particle = new ParticleSystem.Particle
