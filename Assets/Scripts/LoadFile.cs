@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Events;
 using System;
 using UnityEngine.UI;
 using Zinnia.Cast;
@@ -15,10 +14,12 @@ public class LoadFile : MonoBehaviour
     public TextMesh textController;
     public TextMesh textNetwork;
     public GameObject line;
+    public Slider slider;
 
     private ParticleSystem ps;
     public static Dictionary<string, ParticleSystem.Particle> particlesBlood;
     private Dictionary<string, ParticleSystem.Particle> particlesBiopsy;
+    public static Dictionary<string, ParticleSystem.Particle> particlesFusion;
     public static Dictionary<string, List<string>> networkBlood;
     private Dictionary<string, List<string>> networkBiopsy;
     private Dictionary<string, Color32> geneColorBlood;
@@ -28,6 +29,7 @@ public class LoadFile : MonoBehaviour
     private Dictionary<string, Color32> cat_color;
     private bool isBlood = true;
     private string currentNode;
+    private float previousSliderValue;
 
     void Start()
     {
@@ -37,6 +39,9 @@ public class LoadFile : MonoBehaviour
         // Initialize Dictionary to store information about each gene and its color
         geneColorBlood = new Dictionary<string, Color32>();
         geneColorBiopsy = new Dictionary<string, Color32>();
+
+        // Slider Value
+        previousSliderValue = 0.0f;
 
         // Initialize OncoGroups
         InitializeOncoGroups();
@@ -50,11 +55,14 @@ public class LoadFile : MonoBehaviour
         //Initialize network dictionaries
         particlesBlood = new Dictionary<string, ParticleSystem.Particle>();
         particlesBiopsy = new Dictionary<string, ParticleSystem.Particle>();
+        particlesFusion = new Dictionary<string, ParticleSystem.Particle>();
 
         // Initialize network and categories from Blood sample
         particlesBlood = InitializeNetwork("blood-network", "blood-categories");
         // Initialize network and categories from Biopsy sample
         particlesBiopsy = InitializeNetwork("biopsy-network", "biopsy-categories");
+
+        MergeDatasets();
         
         // Start network with the particles from the blood dataset
         var main = ps.main;
@@ -73,6 +81,9 @@ public class LoadFile : MonoBehaviour
     // Filter genes method for the toggle menu
     public void FilterGenes(Text label)
     {
+        if (slider.value != 0 && slider.value != slider.maxValue)
+            return;
+
         Color32 changeColor = new Color32(0, 0, 0, 255);
         string[] keys = Enumerable.ToArray(isBlood ? particlesBlood.Keys : particlesBiopsy.Keys);
         ParticleSystem.Particle[] m_Particles;
@@ -125,10 +136,94 @@ public class LoadFile : MonoBehaviour
             Destroy(line);
         }
         lines.Clear();
+
+        textController.text = "";
+
+        textNetwork.text = "";
     }
 
-    public void TransformDataset(float value){
-        Debug.Log("Value is " + value);
+    public void MergeDatasets()
+    {
+        foreach (KeyValuePair<string, ParticleSystem.Particle> itemB in particlesBlood)
+        {
+            particlesFusion.Add(itemB.Key, itemB.Value);
+        }
+
+        foreach (KeyValuePair<string, ParticleSystem.Particle> itemBi in particlesBiopsy)
+        {
+            if (!particlesFusion.ContainsKey(itemBi.Key))
+            {
+                particlesFusion.Add(itemBi.Key, itemBi.Value);
+            }
+        }
+    }
+
+    public void TransformDataset()
+    {
+        float newSliderValue = slider.value;
+
+        if(slider.value == 0.0f || slider.value == slider.maxValue)
+        {
+            if (isBlood && newSliderValue == 0.0f)
+            {
+                ps.SetParticles(Enumerable.ToArray(particlesBlood.Values), Enumerable.ToArray(particlesBlood.Values).Length);
+                return;
+            }else if (!isBlood && newSliderValue == 10.0f)
+            {
+                ps.SetParticles(Enumerable.ToArray(particlesBiopsy.Values), Enumerable.ToArray(particlesBiopsy.Values).Length);
+                return;
+            }
+
+            ChangeDataset();
+        }
+        else
+        {
+            ParticleSystem.Particle[] fusion = Enumerable.ToArray(particlesFusion.Values);
+            string[] keysFusion = Enumerable.ToArray(particlesFusion.Keys);
+
+            foreach (KeyValuePair<string, ParticleSystem.Particle> item in particlesFusion)
+            {
+                int index = Array.IndexOf(keysFusion, item.Key);
+
+                if (particlesBlood.ContainsKey(item.Key) && particlesBiopsy.ContainsKey(item.Key))
+                {
+                    Vector3 pos1 = particlesBlood[item.Key].position;
+                    Vector3 pos2 = particlesBiopsy[item.Key].position;
+
+                    Vector3 vectorDiff = (previousSliderValue < newSliderValue) ? (pos2 - pos1) : (pos1 - pos2);
+
+                    Vector3 direction = vectorDiff.normalized;
+                    float magnitude = vectorDiff.magnitude;
+                    float newMagnitude = magnitude / slider.maxValue * newSliderValue;
+
+                    Vector3 newVector = direction * newMagnitude;
+
+                    fusion[index].position = newVector;
+
+                    Color lerpedColor = Color.Lerp(particlesBlood[item.Key].color, particlesBiopsy[item.Key].color, 1 / (slider.maxValue / newSliderValue));
+                    fusion[index].color = lerpedColor;
+                }
+                else
+                {
+                    if (particlesBlood.ContainsKey(item.Key))
+                    {
+                        Color lerpedColorBlood = Color.Lerp(particlesBlood[item.Key].color, new Color(0.0f, 0.0f, 0.0f), 1 / (slider.maxValue / newSliderValue));
+                        fusion[index].color = lerpedColorBlood;
+                    }
+                    else
+                    {
+                        Color lerpedColorBiopsy = Color.Lerp(new Color(0.0f, 0.0f, 0.0f), particlesBiopsy[item.Key].color, 1 / (slider.maxValue / newSliderValue));
+                        fusion[index].color = lerpedColorBiopsy;
+                    }
+                }
+            }
+
+            // Update the particle system
+            ps.SetParticles(fusion, fusion.Length);
+
+            // Update previous slider value
+            previousSliderValue = newSliderValue;
+        }
     }
 
     // Reset checkboxes in 2D Menu
@@ -145,6 +240,9 @@ public class LoadFile : MonoBehaviour
     //Similar to HandleData from Zinnia ObjectPointer
     public void SelectNode(PointsCast.EventData data)
     {
+        if (slider.value != 0 && slider.value != slider.maxValue)
+            return;
+
         Dictionary<string, ParticleSystem.Particle> particles;
         Dictionary<string, List<string>> particle_relations;
 
@@ -170,7 +268,7 @@ public class LoadFile : MonoBehaviour
         foreach (KeyValuePair<string, ParticleSystem.Particle> item in particles)
         {
             Vector3 pos = transform.TransformPoint(item.Value.position);
-            float size = item.Value.startSize * 3;
+            float size = item.Value.startSize * 4;
 
             float distance = Vector3.Cross(rayVector, pos - controllerRay.origin).magnitude;
 
@@ -303,15 +401,17 @@ public class LoadFile : MonoBehaviour
         Dictionary<string, List<string>> particle_relations = new Dictionary<string, List<string>>();
         Dictionary<string, ParticleSystem.Particle> particleDict = new Dictionary<string, ParticleSystem.Particle>();
         bool isBiopsy = (networkName == "biopsy-network");
-        int maxIt = isBiopsy ? 100 : 10;
+        int maxIt = 10;
         int ranPos = 50;
-        int norm = isBiopsy ? 1 : 10;
-        Debug.Log(maxIt);
+        int norm = 10;
 
         for(int cat = 0; cat < categories.Length - 1; cat++) {
             string[] content = categories[cat].Split(',');
             string[] genes = content[1].Split(' ');
             Color32 particle_color = cat_color[content[0]];
+
+            if (isBiopsy)
+                Debug.Log("colour is " + content[0]);
             
             for(int gene = 0; gene < genes.Length; gene++) {
                 ParticleSystem.Particle new_particle = new ParticleSystem.Particle
@@ -322,6 +422,7 @@ public class LoadFile : MonoBehaviour
                     startColor = particle_color,
                     position = new Vector3((UnityEngine.Random.value * ranPos) - 25, (UnityEngine.Random.value * 10) - 5, (UnityEngine.Random.value * ranPos) - 25)
                 };
+                
                 particleDict[genes[gene]] = new_particle;
                 if (isBiopsy)
                 {
