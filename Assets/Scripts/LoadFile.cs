@@ -127,6 +127,10 @@ public class LoadFile : MonoBehaviour
         lines.Clear();
     }
 
+    public void TransformDataset(float value){
+        Debug.Log("Value is " + value);
+    }
+
     // Reset checkboxes in 2D Menu
     private void resetToggleMenu()
     {
