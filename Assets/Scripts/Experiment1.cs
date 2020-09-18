@@ -33,10 +33,12 @@ public class Experiment1 : MonoBehaviour
 
         execution = false;
 
-        fpsDict = new float[20];
-        qty = new int[20];
+        //fpsDict = new float[20];
+        //qty = new int[20];
 
         frameTime = new List<float>();
+
+        //ShowEdgesData();
     }
 
     // Update is called once per frame
@@ -57,12 +59,10 @@ public class Experiment1 : MonoBehaviour
         //}
 
         // 3. Node selection and line rendering
-        if (execution == false && num < 20)
+        if (execution == false && num < LoadFile.networkBlood.Count - 1)
         {
             selectNodeCoroutine = selectNode(keys[num], 0.1f);
             StartCoroutine(selectNodeCoroutine);
-
-            //Debug.Log(num);
         }
         //else if (num == 20)
         //{
@@ -80,23 +80,24 @@ public class Experiment1 : MonoBehaviour
         // Calculate distribution for number of edges
 
         // Calculate average low
-        if (Time.frameCount >= 101 && Time.frameCount <= 301)
-        {
-            frameTime.Add(Time.deltaTime * 1000);
-        }
+        //if (Time.frameCount >= 101 && Time.frameCount <= 301)
+        //{
+        //    frameTime.Add(Time.deltaTime * 1000);
+        //}
 
 
-        if (Time.frameCount == 301)
-        {
-            CalculatePercentage();
-            return;
-        }
+        //if (Time.frameCount == 301)
+        //{
+        //    CalculatePercentage();
+        //    return;
+        //}
 
     }
 
     private IEnumerator selectNode(string gene_string, float waitTime)
     {
         execution = true; // set the flag
+        int numLines = 0;
 
         yield return new WaitForSeconds(waitTime);
 
@@ -110,7 +111,7 @@ public class Experiment1 : MonoBehaviour
         lines.Clear();
 
         int maxLines = LoadFile.networkBlood[gene_string].Count;
-        Debug.Log("Maxlines for " + num + " is " + maxLines);
+        //Debug.Log("Maxlines for " + num + " is " + maxLines);
 
         List<string> DoubleGenes = LoadFile.networkBlood[gene_string];
         int maxParticle = LoadFile.particlesBlood.Count;
@@ -128,7 +129,7 @@ public class Experiment1 : MonoBehaviour
         foreach (string remote_gene in LoadFile.networkBlood[gene_string])
         //foreach (string remote_gene in DoubleGenes)
         {
-            fpsDict[num] = UpdateCumulativeMovingAverageFPS(1 / Time.deltaTime, num);
+            //fpsDict[num] = UpdateCumulativeMovingAverageFPS(1 / Time.deltaTime, num);
             //if (++currentNumLines == maxLines) break;
             try
             {
@@ -146,15 +147,20 @@ public class Experiment1 : MonoBehaviour
                 clone_line.SetPositions(vs);
 
                 lines.Add(clone);
+
+                numLines++;
             }
             catch (InvalidCastException e)
             {
                 Debug.Log($"There was an error adding a line: {e}");
+                continue;
             }
 
         }
 
         execution = false; // clear the flag before returning
+
+        Debug.Log(gene_string + " " + numLines + " lines");
 
         // Update node id
         num ++;
@@ -207,5 +213,20 @@ public class Experiment1 : MonoBehaviour
         average /= 50;
 
         Debug.Log("The average of the 25% is " + average);
+    }
+
+    private void ShowEdgesData()
+    {
+        int maxLines = 0;
+
+        // Calculate how many edges in the Blood network
+        foreach (KeyValuePair<string, List<string>> entry in LoadFile.networkBlood)
+        {
+            Debug.Log(entry.Key +" " + entry.Value.Count);
+            if (entry.Value.Count > maxLines)
+                maxLines = entry.Value.Count;
+        }
+
+        Debug.Log("Max num of edges in Blood dataset is " + maxLines);
     }
 }

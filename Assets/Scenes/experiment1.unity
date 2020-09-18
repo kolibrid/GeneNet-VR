@@ -7011,6 +7011,7 @@ MonoBehaviour:
   textController: {fileID: 475132339}
   textNetwork: {fileID: 376744956}
   line: {fileID: 5538408296323256936, guid: a2a159a9acdb8c440a236df1248582d5, type: 3}
+  slider: {fileID: 0}
   lines: []
 --- !u!199 &1026996565
 ParticleSystemRenderer:
@@ -15425,9 +15426,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   network: {fileID: 1026996567}
-  rightController: {fileID: 0}
-  textController: {fileID: 0}
-  textNetwork: {fileID: 0}
   line: {fileID: 5538408296323256936, guid: a2a159a9acdb8c440a236df1248582d5, type: 3}
 --- !u!4 &1722879691
 Transform:

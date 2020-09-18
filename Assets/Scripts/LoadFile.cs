@@ -258,7 +258,6 @@ public class LoadFile : MonoBehaviour
 
         Vector3 rayVector = data.Points[1] - data.Points[0];
         Vector3 forwardRay = rayVector;
-        //Debug.DrawRay(data.Points[0], forwardRay, Color.cyan);
 
         Ray controllerRay = new Ray(data.Points[0], forwardRay);
 
