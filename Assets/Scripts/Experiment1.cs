@@ -19,6 +19,8 @@ public class Experiment1 : MonoBehaviour
     private int[] qty;
     private int maxEdges = 0;
 
+    private List<float> frameTime;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -33,42 +35,62 @@ public class Experiment1 : MonoBehaviour
 
         fpsDict = new float[20];
         qty = new int[20];
+
+        frameTime = new List<float>();
     }
 
     // Update is called once per frame
     void Update()
     {
         // 1. Translate network
-        // Vector3 translate = new Vector3(0.0f, Mathf.Sin(Time.time*3) * Time.deltaTime, 0.3f * Time.deltaTime);
-        // network.transform.Translate(translate);
+        //Vector3 translate = new Vector3(0.0f, Mathf.Sin(Time.time * 3) * Time.deltaTime, 0.3f * Time.deltaTime);
+        //network.transform.Translate(translate);
 
         // 2. Scale network
-        // if((int)Math.Round(Mathf.Sin(Time.time*3f)) < 0){
-        //     network.transform.localScale *= 0.99f;
-        // }else{
-        //     network.transform.localScale *= 1.01f;
-        // }
+        //if ((int)Math.Round(Mathf.Sin(Time.time * 3f)) < 0)
+        //{
+        //    network.transform.localScale *= 0.99f;
+        //}
+        //else
+        //{
+        //    network.transform.localScale *= 1.01f;
+        //}
 
         // 3. Node selection and line rendering
-        // if (execution == false && num < 20){
-        //     selectNodeCoroutine = selectNode(keys[num], 0.5f);
-        //     StartCoroutine(selectNodeCoroutine);
+        if (execution == false && num < 20)
+        {
+            selectNodeCoroutine = selectNode(keys[num], 0.1f);
+            StartCoroutine(selectNodeCoroutine);
 
-        //     Debug.Log(num);
-        // }else if( num == 20)
-        // {
-        //     string results = "";
-        //     int j = 1;
-        //     foreach(float i in fpsDict)
-        //     {
-        //         results = results + " (" + j + ", " + i + ")";
-        //         j++;
-        //     }
-        //     Debug.Log(results);
-        //     num += 1;
-        // }
+            //Debug.Log(num);
+        }
+        //else if (num == 20)
+        //{
+        //    string results = "";
+        //    int j = 1;
+        //    foreach (float i in fpsDict)
+        //    {
+        //        results = results + " (" + j + ", " + i + ")";
+        //        j++;
+        //    }
+        //    Debug.Log(results);
+        //    num += 1;
+        //}
 
         // Calculate distribution for number of edges
+
+        // Calculate average low
+        if (Time.frameCount >= 101 && Time.frameCount <= 301)
+        {
+            frameTime.Add(Time.deltaTime * 1000);
+        }
+
+
+        if (Time.frameCount == 301)
+        {
+            CalculatePercentage();
+            return;
+        }
 
     }
 
@@ -93,18 +115,18 @@ public class Experiment1 : MonoBehaviour
         List<string> DoubleGenes = LoadFile.networkBlood[gene_string];
         int maxParticle = LoadFile.particlesBlood.Count;
         List<string> geneNames = new List<string>(LoadFile.particlesBlood.Keys);
-        List<string> newNetwork = new List<string>(geneNames.GetRange(maxParticle - 30, maxParticle - 1));
+        //List<string> newNetwork = new List<string>(geneNames.GetRange(maxParticle - 30, maxParticle - 1));
 
-        foreach(string name in newNetwork)
-        {
-            if (!newNetwork.Contains(name))
-            {
-                DoubleGenes.Add(name);
-            }
-        }
+        //foreach(string name in newNetwork)
+        //{
+        //    if (!newNetwork.Contains(name))
+        //    {
+        //        DoubleGenes.Add(name);
+        //    }
+        //}
 
-        //foreach (string remote_gene in LoadFile.networkBlood[gene_string])
-        foreach (string remote_gene in DoubleGenes)
+        foreach (string remote_gene in LoadFile.networkBlood[gene_string])
+        //foreach (string remote_gene in DoubleGenes)
         {
             fpsDict[num] = UpdateCumulativeMovingAverageFPS(1 / Time.deltaTime, num);
             //if (++currentNumLines == maxLines) break;
@@ -135,7 +157,7 @@ public class Experiment1 : MonoBehaviour
         execution = false; // clear the flag before returning
 
         // Update node id
-        num += 1;
+        num ++;
     }
 
     private IEnumerator Haptics(float frequency, float amplitude, float duration, bool rightHand, bool leftHand)
@@ -155,5 +177,35 @@ public class Experiment1 : MonoBehaviour
         currentAvgFPS += (newFPS - currentAvgFPS) / qty[nodeID];
 
         return currentAvgFPS;
+    }
+
+    private void CalculatePercentage()
+    {
+        float average = 0.0f;
+
+        Debug.Log("Calculate percentage");
+        Debug.Log("We sort the items first in a descending way");
+
+        frameTime.Sort();
+        frameTime.Reverse();
+
+        Debug.Log("Total number of item is " + frameTime.Count);
+        Debug.Log("We get now the 25% of the highest times, which is the 50 first items from the list");
+
+        var subList = frameTime.GetRange(0, 50);
+
+        Debug.Log("These are the items:");
+
+        foreach (float item in subList)
+        {
+            Debug.Log(item);
+            average += item;
+        }
+
+        Debug.Log("Now we calculate the average of these times");
+
+        average /= 50;
+
+        Debug.Log("The average of the 25% is " + average);
     }
 }
