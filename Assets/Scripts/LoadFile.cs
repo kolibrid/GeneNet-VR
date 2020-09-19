@@ -467,16 +467,22 @@ public class LoadFile : MonoBehaviour
             }
         }
 
-        if (isBiopsy)
-            networkBiopsy = particle_relations;
-        else
-            networkBlood = particle_relations;
-
         Dictionary<string, ParticleSystem.Particle> particlesReal = new Dictionary<string, ParticleSystem.Particle>();
         foreach(var p in particleDict.Keys) {
             if(particle_relations.ContainsKey(p)) {
                 particlesReal[p] = particleDict[p];
             }
+        }
+
+        if (isBiopsy)
+        {
+            particlesBiopsy = particlesReal;
+            networkBiopsy = particle_relations;
+        }
+        else
+        {
+            particlesBlood = particlesReal;
+            networkBlood = particle_relations;
         }
 
         return particlesReal;
