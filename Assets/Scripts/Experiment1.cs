@@ -20,6 +20,7 @@ public class Experiment1 : MonoBehaviour
     private int maxEdges = 0;
 
     private List<float> frameTime;
+    private Dictionary<int, int> nodesEdges;
 
     // Start is called before the first frame update
     void Start()
@@ -37,6 +38,8 @@ public class Experiment1 : MonoBehaviour
         //qty = new int[20];
 
         frameTime = new List<float>();
+
+        nodesEdges = new Dictionary<int, int>();
 
         EdgesData();
     }
@@ -243,43 +246,61 @@ public class Experiment1 : MonoBehaviour
                 }
             }
 
+            if(lineCount == 10 || lineCount == 110 || lineCount == 900 || lineCount == 2900 || lineCount == 5860 || lineCount == 11450 || lineCount == 7560){
+                Debug.Log(lineCount + " - " + gene);
+            }
+
             if(maxLines < lineCount)
             {
                 maxLines = lineCount;
                 maxGene = gene;
             }
+
+            if(nodesEdges.ContainsKey(lineCount)){
+                var val = nodesEdges[lineCount];
+                val++;
+                nodesEdges[lineCount] = val;
+            }else{
+                nodesEdges[lineCount] = 1;
+            }
         }
+
+        // foreach (string remote_gene in LoadFile.networkBlood[maxGene])
+        // {
+        //     try
+        //     {
+        //         if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
+        //             continue;
+
+        //         Vector3[] vs = new Vector3[2];
+        //         GameObject clone;
+        //         LineRenderer clone_line;
+
+        //         vs[0] = transform.TransformPoint(LoadFile.particlesBlood[remote_gene].position);
+        //         vs[1] = transform.TransformPoint(LoadFile.particlesBlood[maxGene].position);
+
+        //         clone = Instantiate(line);
+        //         clone.transform.parent = network.transform;
+        //         clone_line = clone.GetComponent<LineRenderer>();
+
+        //         clone_line.SetPositions(vs);
+
+        //         lines.Add(clone);
+        //     }
+        //     catch (InvalidCastException e)
+        //     {
+        //     }
+        // }
 
         Debug.Log("the gene with max num of edges is " + maxGene);
+        Debug.Log("Max num of edges in Blood dataset is " + maxLines);
 
-        foreach (string remote_gene in LoadFile.networkBlood[maxGene])
-        {
-            try
-            {
-                if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
-                    continue;
-
-                Vector3[] vs = new Vector3[2];
-                GameObject clone;
-                LineRenderer clone_line;
-
-                vs[0] = transform.TransformPoint(LoadFile.particlesBlood[remote_gene].position);
-                vs[1] = transform.TransformPoint(LoadFile.particlesBlood[maxGene].position);
-
-                clone = Instantiate(line);
-                clone.transform.parent = network.Find("Relationships").transform;
-                clone_line = clone.GetComponent<LineRenderer>();
-
-                clone_line.SetPositions(vs);
-
-                lines.Add(clone);
-            }
-            catch (InvalidCastException e)
-            {
-            }
+        string data = "";
+        
+        foreach(KeyValuePair<int, int> item in nodesEdges){
+            data = data + item.Key.ToString() + " " + item.Value.ToString() + "\n";
         }
 
-        Debug.Log("Max num of edges in Blood dataset is " + maxLines);
-        
+        Debug.Log(data);
     }
 }

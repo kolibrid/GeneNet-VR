@@ -18,10 +18,10 @@ public class LoadFile : MonoBehaviour
 
     private ParticleSystem ps;
     public static Dictionary<string, ParticleSystem.Particle> particlesBlood;
-    private Dictionary<string, ParticleSystem.Particle> particlesBiopsy;
+    public static Dictionary<string, ParticleSystem.Particle> particlesBiopsy;
     public static Dictionary<string, ParticleSystem.Particle> particlesFusion;
     public static Dictionary<string, List<string>> networkBlood;
-    private Dictionary<string, List<string>> networkBiopsy;
+    public static Dictionary<string, List<string>> networkBiopsy;
     private Dictionary<string, Color32> geneColorBlood;
     private Dictionary<string, Color32> geneColorBiopsy;
     public List<GameObject> lines;
