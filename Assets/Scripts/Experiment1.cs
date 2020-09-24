@@ -11,7 +11,6 @@ public class Experiment1 : MonoBehaviour
     private List<GameObject> lines;
 
     private IEnumerator selectNodeCoroutine;
-    string[] keys;
     private int num;
     private bool execution;
     private float currentAvgFPS = 0;
@@ -22,6 +21,8 @@ public class Experiment1 : MonoBehaviour
     private List<float> frameTime;
     private string[] experimentNodes = { "TGFBR3", "EPSTI1", "SMNDC1", "HNRNPH3", "ANGEL2", "FOPNL", "ACTR6", "ARGLU1" };
     private Dictionary<int, int> nodesEdges;
+    private Dictionary<int, float> edgesTime;
+    private Dictionary<int, string> scaltyNodes;
     private int numFrames = 501;
 
     // Start is called before the first frame update
@@ -29,8 +30,6 @@ public class Experiment1 : MonoBehaviour
     {
         // Inizialize lines for the eges of the network
         lines = new List<GameObject>();
-
-        keys = LoadFile.particlesBlood.Keys.ToArray();
 
         num = 0;
 
@@ -41,9 +40,12 @@ public class Experiment1 : MonoBehaviour
 
         frameTime = new List<float>();
 
-        //nodesEdges = new Dictionary<int, int>();
+        nodesEdges = new Dictionary<int, int>();
 
-        //EdgesData();
+        edgesTime = new Dictionary<int, float>();
+        scaltyNodes = new Dictionary<int, string>();
+
+        EdgesData();
     }
 
     // Update is called once per frame
@@ -64,20 +66,33 @@ public class Experiment1 : MonoBehaviour
         //}
 
         // 3. Node selection and line rendering        
-        if (Time.frameCount >= numFrames && num < experimentNodes.Length)
+        //if (Time.frameCount >= numFrames && num < experimentNodes.Length)
+        //{
+        //    numFrames += 200;
+        //    //Debug.Log(experimentNodes[num] + "num is " + num + " of total " + (experimentNodes.Length - 1));
+        //    selectNode(experimentNodes[num]);
+        //}
+        //if (num == (experimentNodes.Length - 1))
+        //{
+        //    CalculatePercentage();
+        //    num++;
+        //    return;
+        //}
+
+        //frameTime.Add(Time.deltaTime * 1000);
+
+        // 4. Scalability of the network
+        if (Time.frameCount >= 300 && num < scaltyNodes.Count)
         {
-            numFrames += 200;
-            //Debug.Log(experimentNodes[num] + "num is " + num + " of total " + (experimentNodes.Length - 1));
-            selectNode(experimentNodes[num]);
+            selectNode(scaltyNodes.Values.ToArray()[num]);
         }
-        if (num == (experimentNodes.Length - 1))
+        if (num == (scaltyNodes.Count - 1))
         {
-            CalculatePercentage();
+            CalculateScalability();
             num++;
             return;
         }
 
-        frameTime.Add(Time.deltaTime * 1000);
 
         // Calculate average low
         //if (Time.frameCount >= 501 && Time.frameCount <= 1500)
@@ -110,38 +125,21 @@ public class Experiment1 : MonoBehaviour
         }
         lines.Clear();
 
-        int maxLines = LoadFile.networkBlood[gene_string].Count;
-        //Debug.Log("Maxlines for " + num + " is " + maxLines);
+        int maxLines = LoadFile.networkBiopsy[gene_string].Count;
 
-        //List<string> DoubleGenes = LoadFile.networkBlood[gene_string];
-        //int maxParticle = LoadFile.particlesBlood.Count;
-        //List<string> geneNames = new List<string>(LoadFile.particlesBlood.Keys);
-        //List<string> newNetwork = new List<string>(geneNames.GetRange(maxParticle - 30, maxParticle - 1));
-
-        //foreach(string name in newNetwork)
-        //{
-        //    if (!newNetwork.Contains(name))
-        //    {
-        //        DoubleGenes.Add(name);
-        //    }
-        //}
-
-        foreach (string remote_gene in LoadFile.networkBlood[gene_string])
-        //foreach (string remote_gene in DoubleGenes)
+        foreach (string remote_gene in LoadFile.networkBiopsy[gene_string])
         {
-            //fpsDict[num] = UpdateCumulativeMovingAverageFPS(1 / Time.deltaTime, num);
-            //if (++currentNumLines == maxLines) break;
             try
             {
-                if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
+                if (!LoadFile.particlesBiopsy.ContainsKey(remote_gene))
                     continue;
 
                 Vector3[] vs = new Vector3[2];
                 GameObject clone;
                 LineRenderer clone_line;
 
-                vs[0] = transform.TransformPoint(LoadFile.particlesBlood[remote_gene].position);
-                vs[1] = transform.TransformPoint(LoadFile.particlesBlood[gene_string].position);
+                vs[0] = transform.TransformPoint(LoadFile.particlesBiopsy[remote_gene].position);
+                vs[1] = transform.TransformPoint(LoadFile.particlesBiopsy[gene_string].position);
 
                 clone = Instantiate(line);
                 clone.transform.parent = network.transform;
@@ -166,6 +164,10 @@ public class Experiment1 : MonoBehaviour
         //Debug.Log(gene_string + " " + numLines + " lines");
 
         // Update node id
+
+        // Update dictionary with num edges and time to render
+        edgesTime[numLines] = Time.deltaTime * 1000;
+
         num ++;
     }
 
@@ -188,6 +190,71 @@ public class Experiment1 : MonoBehaviour
         return currentAvgFPS;
     }
 
+    // Calculates the number of edges for each node. Used to draw a scatter plot.
+    private void EdgesData()
+    {
+        int maxLines = 0;
+        string maxGene = "";
+
+        // Calculate edges
+        foreach (string gene in LoadFile.particlesBiopsy.Keys)
+        {
+            var lineCount = 0;
+            foreach (string remote_gene in LoadFile.networkBiopsy[gene])
+            {
+                try
+                {
+                    if (!LoadFile.particlesBiopsy.ContainsKey(remote_gene))
+                        continue;   
+
+                    Vector3[] vs = new Vector3[2];
+
+                    vs[0] = transform.TransformPoint(LoadFile.particlesBiopsy[remote_gene].position);
+                    vs[1] = transform.TransformPoint(LoadFile.particlesBiopsy[gene].position);
+
+                    lineCount++;
+                }
+                catch (InvalidCastException e)
+                {
+                }
+            }
+
+            //if(lineCount == 10 || lineCount == 110 || lineCount == 900 || lineCount == 2900 || lineCount == 5860 || lineCount == 11450 || lineCount == 7560){
+            //    Debug.Log(lineCount + " - " + gene);
+            //}
+
+            if(maxLines < lineCount)
+            {
+                maxLines = lineCount;
+                maxGene = gene;
+            }
+
+            if(nodesEdges.ContainsKey(lineCount)){
+                var val = nodesEdges[lineCount];
+                val++;
+                nodesEdges[lineCount] = val;
+            }else{
+                nodesEdges[lineCount] = 1;
+            }
+
+            if (!scaltyNodes.ContainsKey(lineCount))
+            {
+                scaltyNodes[lineCount] = gene;
+            }
+        }
+
+        //Debug.Log("the gene with max num of edges is " + maxGene);
+        //Debug.Log("Max num of edges in Blood dataset is " + maxLines);
+
+        string data = "";
+        
+        foreach(KeyValuePair<int, int> item in nodesEdges){
+            data = data + item.Key.ToString() + " " + item.Value.ToString() + "\n";
+        }
+
+        //Debug.Log(data);
+    }
+
     private void CalculatePercentage()
     {
         float average1 = 0.0f;
@@ -204,7 +271,7 @@ public class Experiment1 : MonoBehaviour
         Debug.Log("Total number of items is " + frameTime.Count);
         Debug.Log("We get now the 1% and the 0,25% of the highest times, which is the " + percent1 + " and the " + percent025 + " first items from the list");
 
-        var values1= frameTime.GetRange(0, percent1);
+        var values1 = frameTime.GetRange(0, percent1);
         var values025 = frameTime.GetRange(0, percent025);
 
         Debug.Log("These are the items:");
@@ -229,88 +296,15 @@ public class Experiment1 : MonoBehaviour
         Debug.Log("The average low of the 1% is " + average1 + " milliseconds and the average of the 0,25% is " + average025 + " milliseconds");
     }
 
-    // Calculates the number of edges for each node. Used to draw a scatter plot.
-    private void EdgesData()
+    void CalculateScalability()
     {
-        int maxLines = 0;
-        string maxGene = "";
+        var list = edgesTime.Keys.ToList();
+        list.Sort();
+        var data = "";
 
-        // Calculate edges
-        foreach (string gene in LoadFile.particlesBlood.Keys)
+        foreach (var key in list)
         {
-            var lineCount = 0;
-            foreach (string remote_gene in LoadFile.networkBlood[gene])
-            {
-                try
-                {
-                    if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
-                        continue;   
-
-                    Vector3[] vs = new Vector3[2];
-
-                    vs[0] = transform.TransformPoint(LoadFile.particlesBlood[remote_gene].position);
-                    vs[1] = transform.TransformPoint(LoadFile.particlesBlood[gene].position);
-
-                    lineCount++;
-                }
-                catch (InvalidCastException e)
-                {
-                }
-            }
-
-            if(lineCount == 10 || lineCount == 110 || lineCount == 900 || lineCount == 2900 || lineCount == 5860 || lineCount == 11450 || lineCount == 7560){
-                Debug.Log(lineCount + " - " + gene);
-            }
-
-            if(maxLines < lineCount)
-            {
-                maxLines = lineCount;
-                maxGene = gene;
-            }
-
-            if(nodesEdges.ContainsKey(lineCount)){
-                var val = nodesEdges[lineCount];
-                val++;
-                nodesEdges[lineCount] = val;
-            }else{
-                nodesEdges[lineCount] = 1;
-            }
-        }
-
-        // foreach (string remote_gene in LoadFile.networkBlood[maxGene])
-        // {
-        //     try
-        //     {
-        //         if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
-        //             continue;
-
-        //         Vector3[] vs = new Vector3[2];
-        //         GameObject clone;
-        //         LineRenderer clone_line;
-
-        //         vs[0] = transform.TransformPoint(LoadFile.particlesBlood[remote_gene].position);
-        //         vs[1] = transform.TransformPoint(LoadFile.particlesBlood[maxGene].position);
-
-        //         clone = Instantiate(line);
-        //         clone.transform.parent = network.transform;
-        //         clone_line = clone.GetComponent<LineRenderer>();
-
-        //         clone_line.SetPositions(vs);
-
-        //         lines.Add(clone);
-        //     }
-        //     catch (InvalidCastException e)
-        //     {
-        //     }
-        // }
-
-        Debug.Log("the gene with max num of edges is " + maxGene);
-        Debug.Log("Max num of edges in Blood dataset is " + maxLines);
-
-        string data = "";
-        
-        foreach(KeyValuePair<int, int> item in nodesEdges){
-            data = data + item.Key.ToString() + " " + item.Value.ToString() + "\n";
+            data = data + key + " " + edgesTime[key] + "\n";
         }
 
         Debug.Log(data);
