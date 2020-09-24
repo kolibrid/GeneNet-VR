@@ -20,7 +20,9 @@ public class Experiment1 : MonoBehaviour
     private int maxEdges = 0;
 
     private List<float> frameTime;
+    private string[] experimentNodes = { "TGFBR3", "EPSTI1", "SMNDC1", "HNRNPH3", "ANGEL2", "FOPNL", "ACTR6", "ARGLU1" };
     private Dictionary<int, int> nodesEdges;
+    private int numFrames = 501;
 
     // Start is called before the first frame update
     void Start()
@@ -39,9 +41,9 @@ public class Experiment1 : MonoBehaviour
 
         frameTime = new List<float>();
 
-        nodesEdges = new Dictionary<int, int>();
+        //nodesEdges = new Dictionary<int, int>();
 
-        EdgesData();
+        //EdgesData();
     }
 
     // Update is called once per frame
@@ -61,35 +63,30 @@ public class Experiment1 : MonoBehaviour
         //    network.transform.localScale *= 1.01f;
         //}
 
-        // 3. Node selection and line rendering
-        //if (execution == false && num < LoadFile.networkBlood.Count - 1)
-        //{
-        //    selectNodeCoroutine = selectNode(keys[num], 0.1f);
-        //    StartCoroutine(selectNodeCoroutine);
-        //}
-        //else if (num == 20)
-        //{
-        //    string results = "";
-        //    int j = 1;
-        //    foreach (float i in fpsDict)
-        //    {
-        //        results = results + " (" + j + ", " + i + ")";
-        //        j++;
-        //    }
-        //    Debug.Log(results);
-        //    num += 1;
-        //}
+        // 3. Node selection and line rendering        
+        if (Time.frameCount >= numFrames && num < experimentNodes.Length)
+        {
+            numFrames += 200;
+            //Debug.Log(experimentNodes[num] + "num is " + num + " of total " + (experimentNodes.Length - 1));
+            selectNode(experimentNodes[num]);
+        }
+        if (num == (experimentNodes.Length - 1))
+        {
+            CalculatePercentage();
+            num++;
+            return;
+        }
 
-        // Calculate distribution for number of edges
+        frameTime.Add(Time.deltaTime * 1000);
 
         // Calculate average low
-        //if (Time.frameCount >= 101 && Time.frameCount <= 301)
+        //if (Time.frameCount >= 501 && Time.frameCount <= 1500)
         //{
         //    frameTime.Add(Time.deltaTime * 1000);
         //}
 
 
-        //if (Time.frameCount == 301)
+        //if (Time.frameCount == 1500)
         //{
         //    CalculatePercentage();
         //    return;
@@ -97,12 +94,12 @@ public class Experiment1 : MonoBehaviour
 
     }
 
-    private IEnumerator selectNode(string gene_string, float waitTime)
+    private void selectNode(string gene_string)
     {
         execution = true; // set the flag
         int numLines = 0;
 
-        yield return new WaitForSeconds(waitTime);
+        //yield return new WaitForSeconds(waitTime);
 
         // Haptics right controller vibration
         StartCoroutine(Haptics(0.5f, 0.5f, 0.2f, true, false));
@@ -116,9 +113,9 @@ public class Experiment1 : MonoBehaviour
         int maxLines = LoadFile.networkBlood[gene_string].Count;
         //Debug.Log("Maxlines for " + num + " is " + maxLines);
 
-        List<string> DoubleGenes = LoadFile.networkBlood[gene_string];
-        int maxParticle = LoadFile.particlesBlood.Count;
-        List<string> geneNames = new List<string>(LoadFile.particlesBlood.Keys);
+        //List<string> DoubleGenes = LoadFile.networkBlood[gene_string];
+        //int maxParticle = LoadFile.particlesBlood.Count;
+        //List<string> geneNames = new List<string>(LoadFile.particlesBlood.Keys);
         //List<string> newNetwork = new List<string>(geneNames.GetRange(maxParticle - 30, maxParticle - 1));
 
         //foreach(string name in newNetwork)
@@ -136,6 +133,9 @@ public class Experiment1 : MonoBehaviour
             //if (++currentNumLines == maxLines) break;
             try
             {
+                if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
+                    continue;
+
                 Vector3[] vs = new Vector3[2];
                 GameObject clone;
                 LineRenderer clone_line;
@@ -163,7 +163,7 @@ public class Experiment1 : MonoBehaviour
 
         execution = false; // clear the flag before returning
 
-        Debug.Log(gene_string + " " + numLines + " lines");
+        //Debug.Log(gene_string + " " + numLines + " lines");
 
         // Update node id
         num ++;
@@ -190,7 +190,10 @@ public class Experiment1 : MonoBehaviour
 
     private void CalculatePercentage()
     {
-        float average = 0.0f;
+        float average1 = 0.0f;
+        float average025 = 0.0f;
+        int percent1 = (int)(frameTime.Count * 0.1);
+        int percent025 = (int)(frameTime.Count * 0.025);
 
         Debug.Log("Calculate percentage");
         Debug.Log("We sort the items first in a descending way");
@@ -198,26 +201,35 @@ public class Experiment1 : MonoBehaviour
         frameTime.Sort();
         frameTime.Reverse();
 
-        Debug.Log("Total number of item is " + frameTime.Count);
-        Debug.Log("We get now the 25% of the highest times, which is the 50 first items from the list");
+        Debug.Log("Total number of items is " + frameTime.Count);
+        Debug.Log("We get now the 1% and the 0,25% of the highest times, which is the " + percent1 + " and the " + percent025 + " first items from the list");
 
-        var subList = frameTime.GetRange(0, 50);
+        var values1= frameTime.GetRange(0, percent1);
+        var values025 = frameTime.GetRange(0, percent025);
 
         Debug.Log("These are the items:");
 
-        foreach (float item in subList)
+        foreach (float item in values1)
         {
-            Debug.Log(item);
-            average += item;
+            Debug.Log("Item in 1% " + item);
+            average1 += item;
+        }
+
+        foreach (float item in values025)
+        {
+            Debug.Log("Item in 0,25% " + item);
+            average025 += item;
         }
 
         Debug.Log("Now we calculate the average of these times");
 
-        average /= 50;
+        average025 /= percent025;
+        average1 /= percent1;
 
-        Debug.Log("The average of the 25% is " + average);
+        Debug.Log("The average low of the 1% is " + average1 + " milliseconds and the average of the 0,25% is " + average025 + " milliseconds");
     }
 
+    // Calculates the number of edges for each node. Used to draw a scatter plot.
     private void EdgesData()
     {
         int maxLines = 0;
