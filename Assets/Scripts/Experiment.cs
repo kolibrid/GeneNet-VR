@@ -142,11 +142,10 @@ public class Experiment : MonoBehaviour
                 GameObject clone;
                 LineRenderer clone_line;
 
-                vs[0] = transform.TransformPoint(LoadFile.particlesBlood[remote_gene].position);
-                vs[1] = transform.TransformPoint(LoadFile.particlesBlood[gene_string].position);
+                vs[0] = LoadFile.particlesBlood[remote_gene].position;
+                vs[1] = LoadFile.particlesBlood[gene_string].position;
 
-                clone = Instantiate(line);
-                //clone.transform.parent = network.transform;
+                clone = Instantiate(line, network.transform);
                 clone_line = clone.GetComponent<LineRenderer>();
 
                 clone_line.SetPositions(vs);
