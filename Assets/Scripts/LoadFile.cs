@@ -307,15 +307,17 @@ public class LoadFile : MonoBehaviour
             {
                 try
                 {
+                    if (!particles.ContainsKey(remote_gene))
+                        continue;
+
                     Vector3[] vs = new Vector3[2];
                     GameObject clone;
                     LineRenderer clone_line;
 
-                    vs[0] = transform.TransformPoint(particles[remote_gene].position);
-                    vs[1] = transform.TransformPoint(particles[gene_string].position);
+                    vs[0] = particles[remote_gene].position;
+                    vs[1] = particles[gene_string].position;
 
-                    clone = Instantiate(line);
-                    clone.transform.parent = this.transform;
+                    clone = Instantiate(line, this.transform);
                     clone_line = clone.GetComponent<LineRenderer>();
 
                     clone_line.SetPositions(vs);
@@ -445,20 +447,24 @@ public class LoadFile : MonoBehaviour
                 if(!particle_relations.ContainsKey(gene1)) {
                     particle_relations[gene1] = new List<string>();
                 }
-                particle_relations[gene1].Add(gene2);
-
+                if(!particle_relations[gene1].Contains(gene2))
+                {
+                    particle_relations[gene1].Add(gene2);
+                }
                 if(!particle_relations.ContainsKey(gene2)) {
                     particle_relations[gene2] = new List<string>();                    
                 }
-                particle_relations[gene2].Add(gene1);
-
+                if (!particle_relations[gene2].Contains(gene1))
+                {
+                    particle_relations[gene2].Add(gene1);
+                }
 
                 try {
                     int randint = (int)(UnityEngine.Random.value * size);
                     ParticleSystem.Particle particle = particleDict[gene1];
                     Vector3 avoid_direction = particle.position - particleDict[keys[randint]].position;
                     particle.position += avoid_direction.normalized / norm;
-                    Vector3 direction = particleDict[gene2].position - particle.position;                    
+                    Vector3 direction = particleDict[gene2].position - particle.position;
                     particle.position += direction.normalized/5;
                     particleDict[gene1] = particle;
                 } catch {

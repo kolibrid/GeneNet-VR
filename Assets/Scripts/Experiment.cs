@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class Experiment1 : MonoBehaviour
+public class Experiment : MonoBehaviour
 {
     public Transform network;
     public GameObject line;
@@ -23,7 +23,7 @@ public class Experiment1 : MonoBehaviour
     private Dictionary<int, int> nodesEdges;
     private Dictionary<int, float> edgesTime;
     private Dictionary<int, string> scaltyNodes;
-    private int numFrames = 501;
+    private int numFrames = 301;
 
     // Start is called before the first frame update
     void Start()
@@ -45,53 +45,57 @@ public class Experiment1 : MonoBehaviour
         edgesTime = new Dictionary<int, float>();
         scaltyNodes = new Dictionary<int, string>();
 
-        EdgesData();
+        //EdgesData();
     }
 
     // Update is called once per frame
     void Update()
     {
         // 1. Translate network
-        //Vector3 translate = new Vector3(0.0f, Mathf.Sin(Time.time * 3) * Time.deltaTime, 0.3f * Time.deltaTime);
-        //network.transform.Translate(translate);
+        Vector3 translate = new Vector3(0.0f, Mathf.Sin(Time.time * 3) * Time.deltaTime, 0.3f * Time.deltaTime);
+        network.transform.Translate(translate);
 
         // 2. Scale network
-        //if ((int)Math.Round(Mathf.Sin(Time.time * 3f)) < 0)
-        //{
-        //    network.transform.localScale *= 0.99f;
-        //}
-        //else
-        //{
-        //    network.transform.localScale *= 1.01f;
-        //}
+        if ((int)Math.Round(Mathf.Sin(Time.time * 3f)) < 0)
+        {
+            network.transform.localScale *= 0.99f;
+        }
+        else
+        {
+            network.transform.localScale *= 1.01f;
+        }
 
         // 3. Node selection and line rendering        
-        //if (Time.frameCount >= numFrames && num < experimentNodes.Length)
-        //{
-        //    numFrames += 200;
-        //    //Debug.Log(experimentNodes[num] + "num is " + num + " of total " + (experimentNodes.Length - 1));
-        //    selectNode(experimentNodes[num]);
-        //}
-        //if (num == (experimentNodes.Length - 1))
-        //{
-        //    CalculatePercentage();
-        //    num++;
-        //    return;
-        //}
-
-        //frameTime.Add(Time.deltaTime * 1000);
-
-        // 4. Scalability of the network
-        if (Time.frameCount >= 300 && num < scaltyNodes.Count)
+        if (Time.frameCount >= numFrames && num < experimentNodes.Length)
         {
-            selectNode(scaltyNodes.Values.ToArray()[num]);
+            numFrames += 10;
+            //Debug.Log(experimentNodes[num] + "num is " + num + " of total " + (experimentNodes.Length - 1));
+            selectNode(experimentNodes[num]);
         }
-        if (num == (scaltyNodes.Count - 1))
+        if (num == (experimentNodes.Length - 1))
         {
-            CalculateScalability();
+            //CalculatePercentage();
+            CalculateTimes();
             num++;
             return;
         }
+
+        if (Time.frameCount >= 301)
+        {
+            frameTime.Add(Time.deltaTime * 1000);
+        }
+
+        // 4. Scalability of the network
+        //if (Time.frameCount >= 300 && num < scaltyNodes.Count)
+        //{
+        //    selectNode(scaltyNodes.Values.ToArray()[num]);
+        //}
+        //if (num == (scaltyNodes.Count - 1))
+        //{
+        //    CalculateScalability();
+        //    num++;
+        //    return;
+        //}
 
 
         // Calculate average low
@@ -125,24 +129,24 @@ public class Experiment1 : MonoBehaviour
         }
         lines.Clear();
 
-        int maxLines = LoadFile.networkBiopsy[gene_string].Count;
+        int maxLines = LoadFile.networkBlood[gene_string].Count;
 
-        foreach (string remote_gene in LoadFile.networkBiopsy[gene_string])
+        foreach (string remote_gene in LoadFile.networkBlood[gene_string])
         {
             try
             {
-                if (!LoadFile.particlesBiopsy.ContainsKey(remote_gene))
+                if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
                     continue;
 
                 Vector3[] vs = new Vector3[2];
                 GameObject clone;
                 LineRenderer clone_line;
 
-                vs[0] = transform.TransformPoint(LoadFile.particlesBiopsy[remote_gene].position);
-                vs[1] = transform.TransformPoint(LoadFile.particlesBiopsy[gene_string].position);
+                vs[0] = transform.TransformPoint(LoadFile.particlesBlood[remote_gene].position);
+                vs[1] = transform.TransformPoint(LoadFile.particlesBlood[gene_string].position);
 
                 clone = Instantiate(line);
-                clone.transform.parent = network.transform;
+                //clone.transform.parent = network.transform;
                 clone_line = clone.GetComponent<LineRenderer>();
 
                 clone_line.SetPositions(vs);
@@ -163,6 +167,7 @@ public class Experiment1 : MonoBehaviour
 
         //Debug.Log(gene_string + " " + numLines + " lines");
 
+        // Update node id
         // Update node id
 
         // Update dictionary with num edges and time to render
@@ -197,20 +202,20 @@ public class Experiment1 : MonoBehaviour
         string maxGene = "";
 
         // Calculate edges
-        foreach (string gene in LoadFile.particlesBiopsy.Keys)
+        foreach (string gene in LoadFile.particlesBlood.Keys)
         {
             var lineCount = 0;
-            foreach (string remote_gene in LoadFile.networkBiopsy[gene])
+            foreach (string remote_gene in LoadFile.networkBlood[gene])
             {
                 try
                 {
-                    if (!LoadFile.particlesBiopsy.ContainsKey(remote_gene))
+                    if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
                         continue;   
 
                     Vector3[] vs = new Vector3[2];
 
-                    vs[0] = transform.TransformPoint(LoadFile.particlesBiopsy[remote_gene].position);
-                    vs[1] = transform.TransformPoint(LoadFile.particlesBiopsy[gene].position);
+                    vs[0] = transform.TransformPoint(LoadFile.particlesBlood[remote_gene].position);
+                    vs[1] = transform.TransformPoint(LoadFile.particlesBlood[gene].position);
 
                     lineCount++;
                 }
@@ -307,6 +312,18 @@ public class Experiment1 : MonoBehaviour
             data = data + key + " " + edgesTime[key] + "\n";
         }
 
+        Debug.Log(data);
+    }
+
+    void CalculateTimes()
+    {
+        string data = "";
+        int frame = 301;
+        foreach (float time in frameTime)
+        {
+            data = data + frame + " " + time.ToString() + "\n";
+            frame++;
+        }
         Debug.Log(data);
     }
 }
