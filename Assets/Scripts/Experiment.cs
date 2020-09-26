@@ -6,37 +6,53 @@ using UnityEngine;
 
 public class Experiment : MonoBehaviour
 {
-    public Transform network;
+    public Transform myPs;
     public GameObject line;
+
     private List<GameObject> lines;
-
-    private IEnumerator selectNodeCoroutine;
     private int num;
-    private bool execution;
-    private float currentAvgFPS = 0;
-    private float[] fpsDict;
-    private int[] qty;
-    private int maxEdges = 0;
-
     private List<float> frameTime;
     private string[] experimentNodes = { "TGFBR3", "EPSTI1", "SMNDC1", "HNRNPH3", "ANGEL2", "FOPNL", "ACTR6", "ARGLU1" };
     private Dictionary<int, int> nodesEdges;
     private Dictionary<int, float> edgesTime;
     private Dictionary<int, string> scaltyNodes;
+    private Dictionary<string, ParticleSystem.Particle> particles;
+    private Dictionary<string, List<string>> network;
     private int numFrames = 301;
+
+    
+    private string experiment;
+    private bool isBlood;
+    private float sizeDataset;
 
     // Start is called before the first frame update
     void Start()
     {
+        particles = new Dictionary<string, ParticleSystem.Particle>();
+        network = new Dictionary<string, List<string>>();
+        /*
+         * Experiment that we are going to run. These are the opetions:
+         * translate: translation of the network.
+         * scale: scale the network.
+         * selectNode: experiment for the selection of 8 nodes.
+         * scalability: tests the scalability of the dataset.
+         * pcHeadset: compares the performance between the PC and the Headset
+         */
+        experiment = "selectNode";
+
+        // If it is true, the blood dataset is used, if false, the biopsy dataset is used.
+        isBlood = true;
+
+        // Size of the dataset, > 0.0f and <= 1.0f;
+        sizeDataset = 1.0f;
+
+        // Initialize dataset with blood or biopsy and with size of network;
+        InitializeDataset();
+
         // Inizialize lines for the eges of the network
         lines = new List<GameObject>();
 
         num = 0;
-
-        execution = false;
-
-        //fpsDict = new float[20];
-        //qty = new int[20];
 
         frameTime = new List<float>();
 
@@ -45,80 +61,98 @@ public class Experiment : MonoBehaviour
         edgesTime = new Dictionary<int, float>();
         scaltyNodes = new Dictionary<int, string>();
 
-        //EdgesData();
+        if (experiment == "scalability") EdgesData();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        // 1. Translate network
-        Vector3 translate = new Vector3(0.0f, Mathf.Sin(Time.time * 3) * Time.deltaTime, 0.3f * Time.deltaTime);
-        network.transform.Translate(translate);
-
-        // 2. Scale network
-        if ((int)Math.Round(Mathf.Sin(Time.time * 3f)) < 0)
+        switch (experiment)
         {
-            network.transform.localScale *= 0.99f;
+            // 1. Translate network
+            case "translate":
+                Vector3 translate = new Vector3(0.0f, Mathf.Sin(Time.time * 3) * Time.deltaTime, 0.3f * Time.deltaTime);
+                myPs.transform.Translate(translate);
+                if (Time.frameCount >= 501 && Time.frameCount <= 1500) frameTime.Add(Time.deltaTime * 1000);
+                if (Time.frameCount == 1500) CalculatePercentage();
+                break;
+            // 2. Scale network
+            case "scale":
+                if ((int)Math.Round(Mathf.Sin(Time.time * 3f)) < 0) myPs.transform.localScale *= 0.99f;
+                else myPs.transform.localScale *= 1.01f;
+                if (Time.frameCount >= 501 && Time.frameCount <= 1500) frameTime.Add(Time.deltaTime * 1000);
+                if (Time.frameCount == 1500) CalculatePercentage();
+                break;
+            // 3. Node selection and line rendering 
+            case "selectNode":      
+                if (Time.frameCount >= numFrames && num < experimentNodes.Length)
+                {
+                    numFrames += 100;
+                    selectNode(experimentNodes[num]);
+                }
+                if (num == (experimentNodes.Length - 1))
+                {
+                    CalculatePercentage();
+                    num++;
+                }
+                if (Time.frameCount >= 301 && num < experimentNodes.Length) frameTime.Add(Time.deltaTime * 1000);
+                break;
+            // 4. Scalability of the network
+            case "scalability":
+                if (Time.frameCount >= 300 && num < scaltyNodes.Count)
+                {
+                    selectNode(scaltyNodes.Values.ToArray()[num]);
+                }
+                if (num == (scaltyNodes.Count - 1))
+                {
+                    CalculateScalability();
+                    num++;
+                }
+                break;
+            // 5. PC vs Headset hardware
+            case "pcHeadset":
+                Vector3 translate2 = new Vector3(0.0f, Mathf.Sin(Time.time * 3) * Time.deltaTime, 0.3f * Time.deltaTime);
+                myPs.transform.Translate(translate2);
+                if ((int)Math.Round(Mathf.Sin(Time.time * 3f)) < 0) myPs.transform.localScale *= 0.99f;
+                else myPs.transform.localScale *= 1.01f;
+                if (Time.frameCount >= numFrames && num < experimentNodes.Length)
+                {
+                    numFrames += 100;
+                    selectNode(experimentNodes[num]);
+                }
+                if (num == (experimentNodes.Length - 1))
+                {
+                    CalculateTimes();
+                    num++;
+                }
+                if (Time.frameCount >= 301) frameTime.Add(Time.deltaTime * 1000);
+                break;
+        }
+    }
+
+    void InitializeDataset()
+    {
+        Dictionary<string, ParticleSystem.Particle> lParticles = isBlood ? LoadFile.particlesBlood : LoadFile.particlesBiopsy;
+        network = isBlood ? LoadFile.networkBlood : LoadFile.networkBiopsy;
+
+        if(sizeDataset < 1.0f)
+        {
+            int numParticles = (int)(lParticles.Count * sizeDataset);
+            List<string> lKeys = lParticles.Keys.ToList();
+            List<string> nKeys = lKeys.GetRange(0, numParticles);
+            foreach (string name in nKeys)
+            {
+                particles[name] = lParticles[name];
+            }
         }
         else
         {
-            network.transform.localScale *= 1.01f;
+            particles = lParticles;
         }
-
-        // 3. Node selection and line rendering        
-        if (Time.frameCount >= numFrames && num < experimentNodes.Length)
-        {
-            numFrames += 10;
-            //Debug.Log(experimentNodes[num] + "num is " + num + " of total " + (experimentNodes.Length - 1));
-            selectNode(experimentNodes[num]);
-        }
-        if (num == (experimentNodes.Length - 1))
-        {
-            //CalculatePercentage();
-            CalculateTimes();
-            num++;
-            return;
-        }
-
-        if (Time.frameCount >= 301)
-        {
-            frameTime.Add(Time.deltaTime * 1000);
-        }
-
-        // 4. Scalability of the network
-        //if (Time.frameCount >= 300 && num < scaltyNodes.Count)
-        //{
-        //    selectNode(scaltyNodes.Values.ToArray()[num]);
-        //}
-        //if (num == (scaltyNodes.Count - 1))
-        //{
-        //    CalculateScalability();
-        //    num++;
-        //    return;
-        //}
-
-
-        // Calculate average low
-        //if (Time.frameCount >= 501 && Time.frameCount <= 1500)
-        //{
-        //    frameTime.Add(Time.deltaTime * 1000);
-        //}
-
-
-        //if (Time.frameCount == 1500)
-        //{
-        //    CalculatePercentage();
-        //    return;
-        //}
-
     }
 
     private void selectNode(string gene_string)
     {
-        execution = true; // set the flag
         int numLines = 0;
-
-        //yield return new WaitForSeconds(waitTime);
 
         // Haptics right controller vibration
         StartCoroutine(Haptics(0.5f, 0.5f, 0.2f, true, false));
@@ -129,23 +163,21 @@ public class Experiment : MonoBehaviour
         }
         lines.Clear();
 
-        int maxLines = LoadFile.networkBlood[gene_string].Count;
-
-        foreach (string remote_gene in LoadFile.networkBlood[gene_string])
+        foreach (string remote_gene in network[gene_string])
         {
             try
             {
-                if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
+                if (!particles.ContainsKey(remote_gene))
                     continue;
 
                 Vector3[] vs = new Vector3[2];
                 GameObject clone;
                 LineRenderer clone_line;
 
-                vs[0] = LoadFile.particlesBlood[remote_gene].position;
-                vs[1] = LoadFile.particlesBlood[gene_string].position;
+                vs[0] = particles[remote_gene].position;
+                vs[1] = particles[gene_string].position;
 
-                clone = Instantiate(line, network.transform);
+                clone = Instantiate(line, myPs.transform);
                 clone_line = clone.GetComponent<LineRenderer>();
 
                 clone_line.SetPositions(vs);
@@ -161,13 +193,6 @@ public class Experiment : MonoBehaviour
             }
 
         }
-
-        execution = false; // clear the flag before returning
-
-        //Debug.Log(gene_string + " " + numLines + " lines");
-
-        // Update node id
-        // Update node id
 
         // Update dictionary with num edges and time to render
         edgesTime[numLines] = Time.deltaTime * 1000;
@@ -186,14 +211,6 @@ public class Experiment : MonoBehaviour
         if (leftHand) OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.LTouch);
     }
 
-    private float UpdateCumulativeMovingAverageFPS(float newFPS, int nodeID)
-    {
-        ++qty[nodeID];
-        currentAvgFPS += (newFPS - currentAvgFPS) / qty[nodeID];
-
-        return currentAvgFPS;
-    }
-
     // Calculates the number of edges for each node. Used to draw a scatter plot.
     private void EdgesData()
     {
@@ -201,20 +218,20 @@ public class Experiment : MonoBehaviour
         string maxGene = "";
 
         // Calculate edges
-        foreach (string gene in LoadFile.particlesBlood.Keys)
+        foreach (string gene in particles.Keys)
         {
             var lineCount = 0;
-            foreach (string remote_gene in LoadFile.networkBlood[gene])
+            foreach (string remote_gene in network[gene])
             {
                 try
                 {
-                    if (!LoadFile.particlesBlood.ContainsKey(remote_gene))
+                    if (!particles.ContainsKey(remote_gene))
                         continue;   
 
                     Vector3[] vs = new Vector3[2];
 
-                    vs[0] = transform.TransformPoint(LoadFile.particlesBlood[remote_gene].position);
-                    vs[1] = transform.TransformPoint(LoadFile.particlesBlood[gene].position);
+                    vs[0] = transform.TransformPoint(particles[remote_gene].position);
+                    vs[1] = transform.TransformPoint(particles[gene].position);
 
                     lineCount++;
                 }
@@ -247,8 +264,8 @@ public class Experiment : MonoBehaviour
             }
         }
 
-        //Debug.Log("the gene with max num of edges is " + maxGene);
-        //Debug.Log("Max num of edges in Blood dataset is " + maxLines);
+        Debug.Log("the gene with max num of edges is " + maxGene);
+        Debug.Log("Max num of edges in Blood dataset is " + maxLines);
 
         string data = "";
         
@@ -256,13 +273,14 @@ public class Experiment : MonoBehaviour
             data = data + item.Key.ToString() + " " + item.Value.ToString() + "\n";
         }
 
-        //Debug.Log(data);
+        Debug.Log(data);
     }
 
     private void CalculatePercentage()
     {
         float average1 = 0.0f;
         float average025 = 0.0f;
+        float average = 0.0f;
         int percent1 = (int)(frameTime.Count * 0.1);
         int percent025 = (int)(frameTime.Count * 0.025);
 
@@ -292,12 +310,18 @@ public class Experiment : MonoBehaviour
             average025 += item;
         }
 
+        foreach (float item in frameTime)
+        {
+            average += item;
+        }
+
         Debug.Log("Now we calculate the average of these times");
 
         average025 /= percent025;
         average1 /= percent1;
+        average /= frameTime.Count;
 
-        Debug.Log("The average low of the 1% is " + average1 + " milliseconds and the average of the 0,25% is " + average025 + " milliseconds");
+        Debug.Log("The average low of the 1% is " + average1 + " milliseconds, the average of the 0,25% is " + average025 + " milliseconds and the average for the " + frameTime.Count + " total number of frames is " + average);
     }
 
     void CalculateScalability()

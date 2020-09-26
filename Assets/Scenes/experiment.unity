@@ -15406,7 +15406,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1722879691}
   - component: {fileID: 1722879690}
-  - component: {fileID: 1722879692}
   m_Layer: 0
   m_Name: Experiment
   m_TagString: Untagged
@@ -15426,7 +15425,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31325756aa6bf124f965a8aa41fdba3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  network: {fileID: 1026996567}
+  myPs: {fileID: 1026996567}
   line: {fileID: 5538408296323256936, guid: a2a159a9acdb8c440a236df1248582d5, type: 3}
 --- !u!4 &1722879691
 Transform:
@@ -15442,20 +15441,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 21
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1722879692
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1722879689}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31325756aa6bf124f965a8aa41fdba3a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  network: {fileID: 1026996567}
-  line: {fileID: 5538408296323256936, guid: a2a159a9acdb8c440a236df1248582d5, type: 3}
 --- !u!1001 &1725441783
 PrefabInstance:
   m_ObjectHideFlags: 0
