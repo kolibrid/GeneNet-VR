@@ -38,7 +38,7 @@ public class Experiment : MonoBehaviour
          * scalability: tests the scalability of the dataset.
          * pcHeadset: compares the performance between the PC and the Headset
          */
-        experiment = "selectNode";
+        experiment = "pcHeadset";
 
         // If it is true, the blood dataset is used, if false, the biopsy dataset is used.
         isBlood = true;
@@ -116,7 +116,7 @@ public class Experiment : MonoBehaviour
                 else myPs.transform.localScale *= 1.01f;
                 if (Time.frameCount >= numFrames && num < experimentNodes.Length)
                 {
-                    numFrames += 50;
+                    numFrames += 10;
                     selectNode(experimentNodes[num]);
                 }
                 if (num == experimentNodes.Length)
@@ -252,9 +252,14 @@ public class Experiment : MonoBehaviour
                 }
             }
 
-            //if(lineCount == 10 || lineCount == 110 || lineCount == 900 || lineCount == 2900 || lineCount == 5860 || lineCount == 11450 || lineCount == 7560){
+            //if(lineCount == 10 || lineCount == 11 || lineCount == 90 || lineCount == 290 || lineCount == 586 || lineCount == 1145 || lineCount == 7560){
             //    Debug.Log(lineCount + " - " + gene);
             //}
+
+            if (experimentNodes.Contains(gene))
+            {
+                Debug.Log(gene + " has " + lineCount + " lines");
+            }
 
             if(maxLines < lineCount)
             {
