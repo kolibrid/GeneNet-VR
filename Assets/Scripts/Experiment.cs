@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class Experiment : MonoBehaviour
 {
-    public Transform myPs;
+    public GameObject myPs;
     public GameObject line;
 
     private List<GameObject> lines;
@@ -72,15 +72,15 @@ public class Experiment : MonoBehaviour
             case "translate":
                 Vector3 translate = new Vector3(0.0f, Mathf.Sin(Time.time * 3) * Time.deltaTime, 0.3f * Time.deltaTime);
                 myPs.transform.Translate(translate);
-                if (Time.frameCount >= 501 && Time.frameCount <= 1500) frameTime.Add(Time.deltaTime * 1000);
-                if (Time.frameCount == 1500) CalculatePercentage();
+                if (Time.frameCount >= 501 && Time.frameCount <= 1200) frameTime.Add(Time.deltaTime * 1000);
+                if (Time.frameCount == 1200) CalculatePercentage();
                 break;
             // 2. Scale network
             case "scale":
                 if ((int)Math.Round(Mathf.Sin(Time.time * 3f)) < 0) myPs.transform.localScale *= 0.99f;
                 else myPs.transform.localScale *= 1.01f;
-                if (Time.frameCount >= 501 && Time.frameCount <= 1500) frameTime.Add(Time.deltaTime * 1000);
-                if (Time.frameCount == 1500) CalculatePercentage();
+                if (Time.frameCount >= 501 && Time.frameCount <= 1200) frameTime.Add(Time.deltaTime * 1000);
+                if (Time.frameCount == 1200) CalculatePercentage();
                 break;
             // 3. Node selection and line rendering 
             case "selectNode":      
@@ -89,7 +89,7 @@ public class Experiment : MonoBehaviour
                     numFrames += 100;
                     selectNode(experimentNodes[num]);
                 }
-                if (num == (experimentNodes.Length - 1))
+                if (num == experimentNodes.Length)
                 {
                     CalculatePercentage();
                     num++;
@@ -102,7 +102,7 @@ public class Experiment : MonoBehaviour
                 {
                     selectNode(scaltyNodes.Values.ToArray()[num]);
                 }
-                if (num == (scaltyNodes.Count - 1))
+                if (num == scaltyNodes.Count)
                 {
                     CalculateScalability();
                     num++;
@@ -116,10 +116,10 @@ public class Experiment : MonoBehaviour
                 else myPs.transform.localScale *= 1.01f;
                 if (Time.frameCount >= numFrames && num < experimentNodes.Length)
                 {
-                    numFrames += 100;
+                    numFrames += 50;
                     selectNode(experimentNodes[num]);
                 }
-                if (num == (experimentNodes.Length - 1))
+                if (num == experimentNodes.Length)
                 {
                     CalculateTimes();
                     num++;
@@ -136,6 +136,7 @@ public class Experiment : MonoBehaviour
 
         if(sizeDataset < 1.0f)
         {
+            Debug.Log("sizeDataset: " + sizeDataset);
             int numParticles = (int)(lParticles.Count * sizeDataset);
             List<string> lKeys = lParticles.Keys.ToList();
             List<string> nKeys = lKeys.GetRange(0, numParticles);
@@ -143,11 +144,22 @@ public class Experiment : MonoBehaviour
             {
                 particles[name] = lParticles[name];
             }
+            foreach(string name in experimentNodes)
+            {
+                if (!particles.Keys.ToList().Contains(name))
+                {
+                    particles[name] = lParticles[name];
+                }
+            }
         }
         else
         {
             particles = lParticles;
         }
+
+        myPs.GetComponent <ParticleSystem>().SetParticles(particles.Values.ToArray(), particles.Count);
+        myPs.GetComponent<ParticleSystem>().Stop();
+        Debug.Log("There are in total " + particles.Count + " particles in the dataset");
     }
 
     private void selectNode(string gene_string)
