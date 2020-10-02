@@ -22,6 +22,7 @@ public class Experiment : MonoBehaviour
 
     
     private string experiment;
+    private string average;
     private bool isBlood;
     private float sizeDataset;
 
@@ -38,7 +39,8 @@ public class Experiment : MonoBehaviour
          * scalability: tests the scalability of the dataset.
          * pcHeadset: compares the performance between the PC and the Headset
          */
-        experiment = "pcHeadset";
+        experiment = "scalability";
+        average = "scalability";
 
         // If it is true, the blood dataset is used, if false, the biopsy dataset is used.
         isBlood = true;
@@ -62,6 +64,9 @@ public class Experiment : MonoBehaviour
         scaltyNodes = new Dictionary<int, string>();
 
         if (experiment == "scalability") EdgesData();
+
+        // Calculate averages function
+        CalculateAverage();
     }
 
     void Update()
@@ -127,6 +132,99 @@ public class Experiment : MonoBehaviour
                 if (Time.frameCount >= 301) frameTime.Add(Time.deltaTime * 1000);
                 break;
         }
+    }
+
+    void CalculateAverage()
+    {
+        int maxRepetitions = 4;
+        switch (average)
+        {
+            case "pcHeadset":
+                float[] aValuesPC = new float[70];
+                float[] aValuesVR = new float[70];
+
+                for (int it = 1; it <= maxRepetitions; it++)
+                {
+                    string[] pcData = Resources.Load<TextAsset>("Experiments/PCHeadset/pc" + it).text.Split('\n');
+                    string[] vrData = Resources.Load<TextAsset>("Experiments/PCHeadset/vr" + it).text.Split('\n');
+                    for (int j = 0; j < 70; j++)
+                    {
+                        if (aValuesPC.ElementAtOrDefault(j) != null)
+                            aValuesPC[j] = (float)aValuesPC[j] + float.Parse(pcData[j]);
+                        else
+                            aValuesPC[j] = float.Parse(pcData[j]);
+
+                        if (aValuesVR.ElementAtOrDefault(j) != null)
+                            aValuesVR[j] = (float)aValuesVR[j] + float.Parse(vrData[j]);
+                        else
+                            aValuesVR[j] = float.Parse(vrData[j]);
+                    }
+                }
+
+                int frame = 301;
+                string resultsPC = "";
+                string resultsVR = "";
+                foreach (float value in aValuesPC)
+                {
+                    resultsPC = resultsPC + frame + " " + value/maxRepetitions + "\n";
+                    frame++;
+                }
+
+                frame = 301;
+                foreach (float value in aValuesVR)
+                {
+                    resultsVR = resultsVR + frame + " " + value / maxRepetitions + "\n";
+                    frame++;
+                }
+
+                Debug.Log(resultsPC);
+                Debug.Log(resultsVR);
+                break;
+            case "scalability":
+                Dictionary<int, float> scalabilityBlood = new Dictionary<int, float>();
+                Dictionary<int, float> scalabilityBiopsy = new Dictionary<int, float>();
+
+                for (int it = 1; it <= maxRepetitions; it++)
+                {
+                    string[] dataBlood = Resources.Load<TextAsset>("Experiments/Scalability/blood" + it).text.Split('\n');
+                    string[] dataBiopsy = Resources.Load<TextAsset>("Experiments/Scalability/biopsy" + it).text.Split('\n');
+
+                    for (int j = 0; j < dataBlood.Length; j++)
+                    {
+                        string[] content = dataBlood[j].Split(' ');
+                        int frameNum = int.Parse(content[0]);
+                        if (!scalabilityBlood.Keys.ToList().Contains(frameNum))
+                            scalabilityBlood[frameNum] = float.Parse(content[1]);
+                        else
+                            scalabilityBlood[frameNum] = scalabilityBlood[frameNum] + float.Parse(content[1]);
+                    }
+
+                    for (int j = 0; j < dataBiopsy.Length; j++)
+                    {
+                        string[] content = dataBiopsy[j].Split(' ');
+                        int frameNum = int.Parse(content[0]);
+                        if (!scalabilityBiopsy.Keys.ToList().Contains(frameNum))
+                            scalabilityBiopsy[frameNum] = float.Parse(content[1]);
+                        else
+                            scalabilityBiopsy[frameNum] = scalabilityBiopsy[frameNum] + float.Parse(content[1]);
+                    }
+                }
+
+                string resultsBlood = "";
+                string resultsBiopsy = "";
+                foreach (KeyValuePair<int, float> item in scalabilityBlood)
+                {
+                    resultsBlood = resultsBlood + item.Key + " " + (item.Value / maxRepetitions) + "\n";
+                }
+                foreach (KeyValuePair<int, float> item in scalabilityBiopsy)
+                {
+                    resultsBiopsy = resultsBiopsy + item.Key + " " + (item.Value / maxRepetitions) + "\n";
+                }
+
+                Debug.Log(resultsBlood);
+                Debug.Log(resultsBiopsy);
+                break;
+        } 
     }
 
     void InitializeDataset()
