@@ -39,8 +39,8 @@ public class Experiment : MonoBehaviour
          * scalability: tests the scalability of the dataset.
          * pcHeadset: compares the performance between the PC and the Headset
          */
-        experiment = "scalability";
-        average = "scalability";
+        experiment = "translate";
+        average = "translate";
 
         // If it is true, the blood dataset is used, if false, the biopsy dataset is used.
         isBlood = true;
@@ -66,7 +66,7 @@ public class Experiment : MonoBehaviour
         if (experiment == "scalability") EdgesData();
 
         // Calculate averages function
-        CalculateAverage();
+        // CalculateAverage();
     }
 
     void Update()
@@ -87,8 +87,8 @@ public class Experiment : MonoBehaviour
                 if (Time.frameCount >= 501 && Time.frameCount <= 1200) frameTime.Add(Time.deltaTime * 1000);
                 if (Time.frameCount == 1200) CalculatePercentage();
                 break;
-            // 3. Node selection and line rendering 
-            case "selectNode":      
+            // 3. Node selection and line rendering
+            case "selectNode":
                 if (Time.frameCount >= numFrames && num < experimentNodes.Length)
                 {
                     numFrames += 100;
@@ -224,7 +224,7 @@ public class Experiment : MonoBehaviour
                 Debug.Log(resultsBlood);
                 Debug.Log(resultsBiopsy);
                 break;
-        } 
+        }
     }
 
     void InitializeDataset()
@@ -336,7 +336,7 @@ public class Experiment : MonoBehaviour
                 try
                 {
                     if (!particles.ContainsKey(remote_gene))
-                        continue;   
+                        continue;
 
                     Vector3[] vs = new Vector3[2];
 
@@ -396,8 +396,9 @@ public class Experiment : MonoBehaviour
         float average1 = 0.0f;
         float average025 = 0.0f;
         float average = 0.0f;
-        int percent1 = (int)(frameTime.Count * 0.1);
-        int percent025 = (int)(frameTime.Count * 0.025);
+        int percent1 = (int)(frameTime.Count * 0.01);
+        int percent025 = (int)(frameTime.Count * 0.0025);
+        Debug.Log("0.025 is " + percent025);
 
         Debug.Log("Calculate percentage");
         Debug.Log("We sort the items first in a descending way");
@@ -421,7 +422,7 @@ public class Experiment : MonoBehaviour
 
         foreach (float item in values025)
         {
-            Debug.Log("Item in 0,25% " + item);
+            Debug.Log("Item in 0.25% " + item);
             average025 += item;
         }
 
