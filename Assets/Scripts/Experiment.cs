@@ -12,7 +12,7 @@ public class Experiment : MonoBehaviour
     private List<GameObject> lines;
     private int num;
     private List<float> frameTime;
-    private string[] experimentNodes = { "TGFBR3", "EPSTI1", "SMNDC1", "HNRNPH3", "ANGEL2", "FOPNL", "ACTR6", "ARGLU1" };
+    private string[] experimentNodes = { "TGFBR3", "EPSTI1", "SMNDC1", "HNRNPH3", "ANGEL2", "FOPNL", "ARGLU1" };
     private Dictionary<int, int> nodesEdges;
     private Dictionary<int, float> edgesTime;
     private Dictionary<int, string> scaltyNodes;
@@ -20,7 +20,7 @@ public class Experiment : MonoBehaviour
     private Dictionary<string, List<string>> network;
     private int numFrames = 301;
 
-    
+
     private string experiment;
     private string average;
     private bool isBlood;
@@ -383,7 +383,7 @@ public class Experiment : MonoBehaviour
         Debug.Log("Max num of edges in Blood dataset is " + maxLines);
 
         string data = "";
-        
+
         foreach(KeyValuePair<int, int> item in nodesEdges){
             data = data + item.Key.ToString() + " " + item.Value.ToString() + "\n";
         }
