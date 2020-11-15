@@ -15,3 +15,5 @@ GeneNet VR uses the Oculus Quest controllers to interact with the biological net
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
