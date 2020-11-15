@@ -10,7 +10,7 @@ A video showing the application can be viewed here on YouTube: https://youtu.be/
 Clone the repository locally and open it with Unity using the 2018.4.10f1 version. You can run the project on your Oculus Quest by using the Oculus Link or by creating an .apk file in order to run the application on the Oculus Quest hardware.
 
 ## Usage
-<img src="images/oculus_quest_inputs.png" width="100%" height="auto" alt="Mapping of the different actions for the Oculus Quest controllers" />
+<img src="images/oculus_quest_inputs.png" width="70%" height="auto" alt="Mapping of the different actions for the Oculus Quest controllers" />
 GeneNet VR uses the Oculus Quest controllers to interact with the biological networks. These are the different actions that we can use, check the image above for a reference on how to use them with the controllers.
 
 1. Snap rotation: rotates the camera 45 degrees to the right or to the left.
